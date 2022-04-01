@@ -1,3 +1,4 @@
+use database::models::establish_connection;
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server,
@@ -21,6 +22,8 @@ async fn handle(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
 #[tokio::main]
 async fn main() {
     env_logger::init();
+
+    let _ = establish_connection();
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 

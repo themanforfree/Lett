@@ -1,28 +1,29 @@
 table! {
-    comments (coid) {
-        coid -> Unsigned<Integer>,
-        cid -> Nullable<Unsigned<Integer>>,
-        created -> Datetime,
-        authorId -> Unsigned<Integer>,
-        ownerId -> Nullable<Unsigned<Integer>>,
+    articles (aid) {
+        aid -> Unsigned<Integer>,
+        title -> Nullable<Varchar>,
+        content -> Nullable<Text>,
+        created -> Timestamp,
+        modified -> Timestamp,
+        author_id -> Nullable<Unsigned<Integer>>,
+        published -> Bool,
+        comments_num -> Integer,
+    }
+}
+
+table! {
+    comments (cid) {
+        cid -> Unsigned<Integer>,
+        aid -> Nullable<Unsigned<Integer>>,
+        created -> Timestamp,
+        author_id -> Unsigned<Integer>,
+        owner_id -> Nullable<Unsigned<Integer>>,
         text -> Varchar,
     }
 }
 
 table! {
-    contents (cid) {
-        cid -> Unsigned<Integer>,
-        title -> Nullable<Varchar>,
-        created -> Datetime,
-        modified -> Datetime,
-        authorId -> Nullable<Unsigned<Integer>>,
-        published -> Nullable<Varchar>,
-        commentsNum -> Nullable<Integer>,
-    }
-}
-
-table! {
-    setting (name) {
+    settings (name) {
         name -> Varchar,
         value -> Nullable<Varchar>,
     }
@@ -33,13 +34,13 @@ table! {
         uid -> Unsigned<Integer>,
         username -> Varchar,
         password -> Varchar,
-        created -> Datetime,
+        created -> Timestamp,
     }
 }
 
 allow_tables_to_appear_in_same_query!(
+    articles,
     comments,
-    contents,
-    setting,
+    settings,
     users,
 );

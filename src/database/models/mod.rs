@@ -2,9 +2,9 @@ use diesel::{prelude::*, result::Error, MysqlConnection};
 use dotenv::dotenv;
 use std::env;
 
+mod article;
 mod comment;
-mod content;
-mod setting;
+mod settings;
 mod user;
 
 pub fn establish_connection() -> MysqlConnection {
@@ -12,10 +12,10 @@ pub fn establish_connection() -> MysqlConnection {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     MysqlConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub trait CRUD<NewModel, PK> {
+pub trait Crud<NewModel, PK> {
     fn create(conn: &MysqlConnection, from: &NewModel) -> Result<Self, Error>
     where
         Self: Sized;
