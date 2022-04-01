@@ -4,6 +4,7 @@ CREATE TABLE users(
   uid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   username VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
-  created DATETIME NOT NULL,
-  PRIMARY KEY (uid)
+  created DATETIME NOT NULL DEFAULT,
+  PRIMARY KEY (uid),
+  UNIQUE (username)
 );
