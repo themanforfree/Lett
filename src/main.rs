@@ -11,24 +11,22 @@ extern crate diesel;
 
 mod database;
 mod router;
-use router::RouteTable;
-// use router::RouteTable;
+// use router;
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
-
     let _ = establish_connection();
 
-    if let Err(e) = RouteTable::init() {
-        eprintln!("Failed to init route table: {}", e);
+    if let Err(e) = router::init() {
+        eprintln!("Failed to initialize router: {}", e);
         std::process::exit(1);
     }
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     let make_service =
-        make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(RouteTable::handle)) });
+        make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(router::handle)) });
 
     let server = Server::bind(&addr).serve(make_service);
 

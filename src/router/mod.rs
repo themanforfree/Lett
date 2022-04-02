@@ -1,6 +1,5 @@
-use anyhow::{anyhow, Result};
-use matchit::Router;
-use std::future::Future;
+use anyhow::{anyhow, bail, Result};
+use matchit::{MatchError, Router};
 use tokio::sync::{OnceCell, RwLock};
 
 mod index;
@@ -9,48 +8,38 @@ mod not_found;
 type HyperReq = hyper::Request<hyper::Body>;
 type HyperRes = hyper::Response<hyper::Body>;
 
-static ROUTE_TABLE: OnceCell<RouteTable> = OnceCell::const_new();
+static ROUTE_TABLE: OnceCell<RwLock<Router<RouterType>>> = OnceCell::const_new();
 
-#[async_trait::async_trait]
-pub trait HTTPHandler: Send + Sync + 'static {
-    async fn handle(&self, req: HyperReq) -> HyperRes;
+enum RouterType {
+    Index,
+    // TODO: Add more routes here
 }
 
-#[async_trait::async_trait]
-impl<F: Send + Sync + 'static, Fut> HTTPHandler for F
-where
-    F: Fn(HyperReq) -> Fut,
-    Fut: Future<Output = HyperRes> + Send + 'static,
-{
-    async fn handle(&self, ctx: HyperReq) -> HyperRes {
-        self(ctx).await
-    }
+pub fn init() -> Result<()> {
+    let mut router = Router::new();
+    router.insert("/", RouterType::Index)?;
+    // TODO: Add more routes here
+    ROUTE_TABLE
+        .set(RwLock::new(router))
+        .map_err(|_| anyhow!("Failed to initialize router"))?;
+    Ok(())
 }
 
-pub struct RouteTable {
-    routes: RwLock<Router<Box<dyn HTTPHandler>>>,
-}
+pub async fn handle(req: HyperReq) -> Result<HyperRes> {
+    let router = ROUTE_TABLE
+        .get()
+        .ok_or_else(|| anyhow!("Router not initialized"))?
+        .read()
+        .await;
+    let path = req.uri().path();
+    let res = match router.at(path) {
+        Ok(matched) => match matched.value {
+            RouterType::Index => index::handler(req).await,
+            // TODO: Add more cases
+        },
+        Err(e) if e == MatchError::NotFound => not_found::handler(req).await,
+        Err(e) => bail!("{}", e),
+    };
 
-impl RouteTable {
-    pub fn init() -> Result<()> {
-        let mut routes: Router<Box<dyn HTTPHandler>> = Router::new();
-        routes.insert("/", Box::new(index::handler))?;
-        ROUTE_TABLE
-            .set(RouteTable {
-                routes: RwLock::new(routes),
-            })
-            .map_err(|_| anyhow!("Failed to init route table"))?;
-        Ok(())
-    }
-
-    pub async fn handle(req: HyperReq) -> Result<HyperRes> {
-        let route_table = ROUTE_TABLE.get().unwrap();
-        let path = req.uri().path();
-        let res = if let Ok(handler) = route_table.routes.read().await.at(path) {
-            handler.value.handle(req).await
-        } else {
-            not_found::handler(req).await
-        };
-        Ok(res)
-    }
+    Ok(res)
 }

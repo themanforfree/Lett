@@ -1,5 +1,6 @@
 use super::{HyperReq, HyperRes};
 
-pub async fn handler(_req: HyperReq) -> HyperRes {
-    HyperRes::new(hyper::Body::from("Not found"))
+pub async fn handler(req: HyperReq) -> HyperRes {
+    let path = req.uri().path();
+    HyperRes::new(hyper::Body::from(format!("Path: {} Not Found", path)))
 }
