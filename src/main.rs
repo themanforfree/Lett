@@ -1,23 +1,18 @@
 use database::models::establish_connection;
 use hyper::{
     service::{make_service_fn, service_fn},
-    Body, Request, Response, Server,
+    Server,
 };
-use log::info;
+// use log::info;
 use std::{convert::Infallible, net::SocketAddr};
 
 #[macro_use]
 extern crate diesel;
 
 mod database;
-
-async fn handle(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    let res = Response::new(Body::from("Hello World!"));
-    info!("{:#?}", _req);
-    info!("{:#?}", res);
-
-    Ok(res)
-}
+mod router;
+use router::RouteTable;
+// use router::RouteTable;
 
 #[tokio::main]
 async fn main() {
@@ -25,9 +20,15 @@ async fn main() {
 
     let _ = establish_connection();
 
+    if let Err(e) = RouteTable::init() {
+        eprintln!("Failed to init route table: {}", e);
+        std::process::exit(1);
+    }
+
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    let make_service = make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(handle)) });
+    let make_service =
+        make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(RouteTable::handle)) });
 
     let server = Server::bind(&addr).serve(make_service);
 
