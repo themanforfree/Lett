@@ -3,29 +3,14 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Server,
 };
-use lazy_static::lazy_static;
+
 use std::{convert::Infallible, net::SocketAddr};
-use tera::Tera;
 
 #[macro_use]
 extern crate diesel;
 
 mod database;
 mod router;
-
-lazy_static! {
-    pub static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new("templates/**/*.html") {
-            Ok(t) => t,
-            Err(e) => {
-                eprintln!("Parsing error(s): {}", e);
-                std::process::exit(1);
-            }
-        };
-        tera.autoescape_on(vec![]);
-        tera
-    };
-}
 
 #[tokio::main]
 async fn main() {
