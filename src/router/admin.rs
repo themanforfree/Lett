@@ -12,8 +12,14 @@ pub async fn handle(_req: HyperReq) -> HyperRes {
     </head>
     <body>
         <form action="/new" method="post">
+            <h2>New Article</h2>
             <input type="text" name="title" />
             <input type="text" name="content" />
+            <button type="submit">submit</button>
+        </form>
+        <form action="/delete" method="post">
+            <h2>Delete Article</h2>
+            <input type="text" name="aid" />
             <button type="submit">submit</button>
         </form>
     </body>

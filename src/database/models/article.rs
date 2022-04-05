@@ -30,7 +30,7 @@ impl From<Bytes> for NewArticle {
     }
 }
 
-pub fn read_articles(conn: &MysqlConnection) -> Result<Vec<Article>> {
+pub fn read(conn: &MysqlConnection) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     articles
         .order(aid.desc())
@@ -38,21 +38,17 @@ pub fn read_articles(conn: &MysqlConnection) -> Result<Vec<Article>> {
         .map_err(Into::into)
 }
 
-pub fn read_articles_by_archive(
-    conn: &MysqlConnection,
-    year: i32,
-    month: u32,
-) -> Result<Vec<Article>> {
-    diesel::sql_query(
-        "SELECT * FROM articles WHERE year(created) = ? AND month(created) = ?  ORDER BY aid DESC",
-    )
-    .bind::<diesel::sql_types::Text, _>(year.to_string())
-    .bind::<diesel::sql_types::Text, _>(month.to_string())
-    .load::<Article>(conn)
-    .map_err(Into::into)
+pub fn read_by_archive(conn: &MysqlConnection, year: i32, month: u32) -> Result<Vec<Article>> {
+    let sql = format!(
+        "SELECT * FROM articles WHERE year(CONVERT_TZ(`created`, '+00:00', '{timezone}')) = {} AND month(CONVERT_TZ(`created`, '+00:00', '{timezone}')) = {}  ORDER BY aid DESC",
+        year, month, timezone = "+08:00"
+    );
+    diesel::sql_query(sql)
+        .load::<Article>(conn)
+        .map_err(Into::into)
 }
 
-pub fn search_articles(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Article>> {
+pub fn search(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     articles
         .filter(content.like(format!("%{}%", keyword)))
@@ -60,10 +56,17 @@ pub fn search_articles(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Arti
         .map_err(Into::into)
 }
 
-pub fn add_article(conn: &MysqlConnection, article: &NewArticle) -> Result<usize> {
+pub fn create(conn: &MysqlConnection, article: &NewArticle) -> Result<usize> {
     use crate::database::schema::articles::dsl::*;
     diesel::insert_into(articles)
         .values(article)
+        .execute(conn)
+        .map_err(Into::into)
+}
+
+pub fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
+    use crate::database::schema::articles::dsl::*;
+    diesel::delete(articles.filter(aid.eq(id)))
         .execute(conn)
         .map_err(Into::into)
 }

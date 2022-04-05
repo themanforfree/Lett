@@ -1,5 +1,5 @@
 use super::{HyperReq, HyperRes};
-use crate::database::models::{article::search_articles, establish_connection};
+use crate::database::models::{article, establish_connection};
 
 pub async fn handle(req: HyperReq) -> HyperRes {
     let query = req.uri().query().unwrap_or_default();
@@ -14,6 +14,6 @@ pub async fn handle(req: HyperReq) -> HyperRes {
             }
         })
         .unwrap_or_default();
-    let articles = search_articles(&establish_connection(), &keyword).unwrap_or_default();
+    let articles = article::search(&establish_connection(), &keyword).unwrap_or_default();
     HyperRes::new(format!("{:#?}", articles).into())
 }

@@ -7,7 +7,9 @@ use tokio::sync::{OnceCell, RwLock};
 
 mod admin;
 mod archive;
+mod delete;
 mod index;
+mod login;
 mod new;
 mod not_found;
 mod search;
@@ -23,6 +25,8 @@ enum RouterType {
     Search,
     Admin,
     New,
+    Delete,
+    Login,
     // TODO: Add more routes here
 }
 
@@ -30,9 +34,15 @@ pub fn init() -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
+    router.insert("/:year/:month/", RouterType::Archive)?;
+
     router.insert("/search", RouterType::Search)?;
     router.insert("/admin", RouterType::Admin)?;
+    router.insert("/admin/", RouterType::Admin)?;
+
     router.insert("/new", RouterType::New)?;
+    router.insert("/delete", RouterType::Delete)?;
+    router.insert("/login", RouterType::Login)?;
     // TODO: Add more routes here
     ROUTE_TABLE
         .set(RwLock::new(router))
@@ -63,7 +73,11 @@ pub async fn handle(req: HyperReq) -> Result<HyperRes, Infallible> {
 
             (&Method::GET, RouterType::Admin) => return Ok(admin::handle(req).await),
 
+            (_, RouterType::Login) => return Ok(login::handle(req).await),
+
             (&Method::POST, RouterType::New) => return Ok(new::handle(req).await),
+
+            (&Method::POST, RouterType::Delete) => return Ok(delete::handle(req).await),
 
             _ => return Ok(not_found::handle(req).await),
         }
