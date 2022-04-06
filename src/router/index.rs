@@ -1,7 +1,7 @@
-use super::{HyperReq, HyperRes};
 use crate::database::models::{article, establish_connection};
+use hyper::{Body, Request, Response};
 
-pub async fn handle(_req: HyperReq) -> HyperRes {
+pub(crate) async fn handle(_req: Request<Body>) -> Option<Response<Body>> {
     let articles = article::read(&establish_connection()).unwrap_or_default();
-    HyperRes::new(hyper::Body::from(format!("{:#?}", articles)))
+    Some(Response::new(Body::from(format!("{:#?}", articles))))
 }

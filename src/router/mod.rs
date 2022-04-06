@@ -1,9 +1,8 @@
-use std::convert::Infallible;
-
 use anyhow::{anyhow, Result};
-use hyper::Method;
+use hyper::{Body, Method, Request, Response};
 use matchit::Router;
-use tokio::sync::{OnceCell, RwLock};
+use once_cell::sync::OnceCell;
+use std::convert::Infallible;
 
 mod admin;
 mod archive;
@@ -11,13 +10,9 @@ mod delete;
 mod index;
 mod login;
 mod new;
-mod not_found;
 mod search;
 
-type HyperReq = hyper::Request<hyper::Body>;
-type HyperRes = hyper::Response<hyper::Body>;
-
-static ROUTE_TABLE: OnceCell<RwLock<Router<RouterType>>> = OnceCell::const_new();
+static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 
 enum RouterType {
     Index,
@@ -30,7 +25,7 @@ enum RouterType {
     // TODO: Add more routes here
 }
 
-pub fn init() -> Result<()> {
+pub(crate) fn init() -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
@@ -45,42 +40,37 @@ pub fn init() -> Result<()> {
     router.insert("/login", RouterType::Login)?;
     // TODO: Add more routes here
     ROUTE_TABLE
-        .set(RwLock::new(router))
+        .set(router)
         .map_err(|_| anyhow!("Failed to initialize router"))?;
     Ok(())
 }
 
-pub async fn handle(req: HyperReq) -> Result<HyperRes, Infallible> {
-    let router = ROUTE_TABLE.get().unwrap().read().await;
+async fn merge(req: Request<Body>) -> Option<Response<Body>> {
+    let router = ROUTE_TABLE.get().unwrap();
     let path = req.uri().path();
     if let Ok(matched) = router.at(path) {
         match (req.method(), matched.value) {
+            (&Method::POST, RouterType::New) => new::handle(req).await,
+            (&Method::POST, RouterType::Delete) => delete::handle(req).await,
+            (&Method::GET, RouterType::Search) => search::handle(req).await,
+            (&Method::GET, RouterType::Admin) => admin::handle(req).await,
+            (&Method::GET, RouterType::Index) => index::handle(req).await,
+            (_, RouterType::Login) => login::handle(req).await,
             (&Method::GET, RouterType::Archive) => {
-                let year = match matched.params.get("year").and_then(|y| y.parse().ok()) {
-                    Some(year) => year,
-                    None => return Ok(not_found::handle(req).await),
-                };
-                let month = match matched.params.get("month").and_then(|m| m.parse().ok()) {
-                    Some(month) => month,
-                    None => return Ok(not_found::handle(req).await),
-                };
-                return Ok(archive::handle(req, year, month).await);
+                let year = matched.params.get("year")?.to_owned();
+                let month = matched.params.get("month")?.to_owned();
+                archive::handle(req, &year, &month).await
             }
-
-            (&Method::GET, RouterType::Index) => return Ok(index::handle(req).await),
-
-            (&Method::GET, RouterType::Search) => return Ok(search::handle(req).await),
-
-            (&Method::GET, RouterType::Admin) => return Ok(admin::handle(req).await),
-
-            (_, RouterType::Login) => return Ok(login::handle(req).await),
-
-            (&Method::POST, RouterType::New) => return Ok(new::handle(req).await),
-
-            (&Method::POST, RouterType::Delete) => return Ok(delete::handle(req).await),
-
-            _ => return Ok(not_found::handle(req).await),
+            _ => None,
         }
+    } else {
+        None
     }
-    Ok(not_found::handle(req).await)
+}
+
+pub(crate) async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+    match merge(req).await {
+        Some(res) => Ok(res),
+        None => Ok(Response::new(hyper::Body::from("Not Found"))),
+    }
 }

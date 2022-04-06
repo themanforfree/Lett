@@ -1,7 +1,7 @@
-use super::{HyperReq, HyperRes};
 use crate::database::models::{article, establish_connection};
+use hyper::{Body, Request, Response};
 
-pub async fn handle(req: HyperReq) -> HyperRes {
+pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     let query = req.uri().query().unwrap_or_default();
     let keyword = serde_urlencoded::from_str::<Vec<(String, String)>>(query)
         .unwrap_or_default()
@@ -15,5 +15,5 @@ pub async fn handle(req: HyperReq) -> HyperRes {
         })
         .unwrap_or_default();
     let articles = article::search(&establish_connection(), &keyword).unwrap_or_default();
-    HyperRes::new(format!("{:#?}", articles).into())
+    Some(Response::new(format!("{:#?}", articles).into()))
 }

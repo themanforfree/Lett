@@ -2,9 +2,10 @@ use diesel::{prelude::*, MysqlConnection};
 use dotenv::dotenv;
 use std::env;
 
-pub mod article;
+pub(crate) mod article;
+pub(crate) mod session;
 
-pub fn establish_connection() -> MysqlConnection {
+pub(crate) fn establish_connection() -> MysqlConnection {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");

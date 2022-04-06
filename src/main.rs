@@ -16,6 +16,7 @@ mod router;
 async fn main() {
     env_logger::init();
     let _ = establish_connection();
+    // TODO: parse config file
 
     if let Err(e) = router::init() {
         eprintln!("Failed to initialize router: {}", e);

@@ -1,11 +1,12 @@
-use super::{HyperReq, HyperRes};
-use hyper::Method;
+use crate::database::models::establish_connection;
+use crate::database::models::session::{self, Session};
+use hyper::{header, Body, Method, Request, Response, StatusCode};
 
 fn check_login(username: &str, password: &str) -> bool {
     username == "admin" && password == "admin"
 }
 
-pub async fn handle(req: HyperReq) -> HyperRes {
+pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     match req.method() {
         &Method::GET => {
             let from_html = r#"
@@ -29,7 +30,7 @@ pub async fn handle(req: HyperReq) -> HyperRes {
             </body>
         </html>
         "#;
-            HyperRes::new(hyper::Body::from(from_html))
+            Some(Response::new(hyper::Body::from(from_html)))
         }
         &Method::POST => {
             let body = hyper::body::to_bytes(req.into_body()).await.unwrap();
@@ -38,17 +39,31 @@ pub async fn handle(req: HyperReq) -> HyperRes {
             let username = &query.iter().find(|(k, _)| k == "username").unwrap().1;
             let password = &query.iter().find(|(k, _)| k == "password").unwrap().1;
             if check_login(username, password) {
-                let mut res = HyperRes::new(hyper::Body::empty());
-                *res.status_mut() = hyper::StatusCode::FOUND;
+                let session = Session::new();
+
+                let mut res = Response::new(Body::empty());
+                *res.status_mut() = StatusCode::FOUND;
                 res.headers_mut().insert(
-                    hyper::header::LOCATION,
-                    hyper::header::HeaderValue::from_str("/admin").unwrap(),
+                    header::LOCATION,
+                    header::HeaderValue::from_str("/admin").unwrap(),
                 );
-                res
+                match session.to_cookie() {
+                    Ok(cookie) => {
+                        res.headers_mut().insert(
+                            header::SET_COOKIE,
+                            header::HeaderValue::from_str(&cookie).unwrap(),
+                        );
+                        session::insert(&establish_connection(), &session).unwrap();
+                    }
+                    Err(e) => {
+                        println!("{}", e)
+                    }
+                }
+                Some(res)
             } else {
-                HyperRes::new(hyper::Body::from("login failed"))
+                Some(Response::new(hyper::Body::from("login failed")))
             }
         }
-        _ => HyperRes::new(hyper::Body::from("Unsupported method")),
+        _ => Some(Response::new(hyper::Body::from("Unsupported method"))),
     }
 }
