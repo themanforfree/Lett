@@ -11,6 +11,7 @@ mod index;
 mod login;
 mod new;
 mod search;
+mod static_files;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 
@@ -22,7 +23,6 @@ enum RouterType {
     New,
     Delete,
     Login,
-    // TODO: Add more routes here
 }
 
 pub(crate) fn init() -> Result<()> {
@@ -39,7 +39,9 @@ pub(crate) fn init() -> Result<()> {
     router.insert("/delete", RouterType::Delete)?;
     router.insert("/login", RouterType::Login)?;
     router.insert("/login/", RouterType::Login)?;
-    // TODO: Add more routes here
+
+    // TODO: route static files
+
     ROUTE_TABLE
         .set(router)
         .map_err(|_| anyhow!("Failed to initialize router"))?;
@@ -65,7 +67,7 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
             _ => None,
         }
     } else {
-        None
+        static_files::handle(req).await
     }
 }
 
