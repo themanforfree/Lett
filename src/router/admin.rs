@@ -4,6 +4,7 @@ use hyper::{header, Body, Request, Response, StatusCode};
 pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     match session::get_from_request(&establish_connection(), &req) {
         Some(s) if s.check_expiration() => {
+            log::debug!("Request admin page success: {:?}", s);
             let admin_page = r#"
             <!DOCTYPE html>
             <html lang="en">
@@ -31,6 +32,7 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
             Some(Response::new(Body::from(admin_page)))
         }
         _ => {
+            log::debug!("Request admin page failed, Redirect to /login");
             let mut res = Response::new(Body::empty());
             *res.status_mut() = StatusCode::FOUND;
             res.headers_mut().insert(

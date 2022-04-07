@@ -10,6 +10,7 @@ pub(crate) async fn handle(_req: Request<Body>, year: &str, month: &str) -> Opti
     if !(1..=12).contains(&month) {
         return None;
     }
+    log::debug!("Request archive page: year = {}, month = {}", year, month);
     let articles = article::read_by_archive(&establish_connection(), year, month).ok()?;
     Some(Response::new(Body::from(format!("{:#?}", articles))))
 }

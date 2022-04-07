@@ -27,7 +27,7 @@ async fn main() {
     let make_service =
         make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(router::handle)) });
     let server = Server::bind(&addr).serve(make_service);
-
+    log::info!("Listening on http://{}", addr);
     if let Err(e) = server.await {
         eprintln!("server error: {}", e);
     }

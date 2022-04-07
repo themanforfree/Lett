@@ -16,6 +16,7 @@ fn check_login(username: &str, password: &str) -> bool {
 pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     match *req.method() {
         Method::GET => {
+            log::debug!("Request login page");
             let from_html = r#"
         <!DOCTYPE html>
         <html lang="en">
@@ -41,8 +42,9 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
         }
         Method::POST => {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
-            let query = serde_urlencoded::from_bytes::<Params>(&body).ok()?;
-            if check_login(query.username, query.password) {
+            let params = serde_urlencoded::from_bytes::<Params>(&body).ok()?;
+            log::debug!("Post to login: username = {}", params.username);
+            if check_login(params.username, params.password) {
                 let session = Session::new();
 
                 let mut res = Response::new(Body::empty());
@@ -53,9 +55,7 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
                 );
                 match session.to_cookie() {
                     Ok(cookie) => {
-                        session::insert(&establish_connection(), &session).unwrap_or_else(|e| {
-                            panic!("{}", e);
-                        });
+                        session::insert(&establish_connection(), &session).unwrap();
                         res.headers_mut().insert(
                             header::SET_COOKIE,
                             header::HeaderValue::from_str(&cookie).unwrap(),

@@ -38,6 +38,7 @@ pub(crate) fn init() -> Result<()> {
     router.insert("/new", RouterType::New)?;
     router.insert("/delete", RouterType::Delete)?;
     router.insert("/login", RouterType::Login)?;
+    router.insert("/login/", RouterType::Login)?;
     // TODO: Add more routes here
     ROUTE_TABLE
         .set(router)
@@ -69,8 +70,12 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
 }
 
 pub(crate) async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+    let path = req.uri().path().to_owned();
     match merge(req).await {
         Some(res) => Ok(res),
-        None => Ok(Response::new(hyper::Body::from("Not Found"))),
+        None => {
+            log::debug!("Not Found: {}", path);
+            Ok(Response::new(hyper::Body::from("Not Found")))
+        }
     }
 }

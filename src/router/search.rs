@@ -11,5 +11,6 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     let query = req.uri().query()?;
     let params: Params = serde_urlencoded::from_str(query).ok()?;
     let articles = article::search(&establish_connection(), &params.keyword).unwrap_or_default();
+    log::debug!("Request search page: keyword = {}", params.keyword);
     Some(Response::new(format!("{:#?}", articles).into()))
 }
