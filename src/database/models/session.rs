@@ -14,16 +14,12 @@ pub(crate) struct Session {
     expiration: i64,
 }
 
-fn get_timestamp() -> i64 {
-    OffsetDateTime::now_utc().unix_timestamp()
-}
-
 impl Session {
     pub(crate) fn new() -> Self {
         Self {
             sid: nanoid!(16),
             data: None,
-            expiration: get_timestamp() + 5 * 60,
+            expiration: OffsetDateTime::now_utc().unix_timestamp() + 5 * 60,
         }
     }
 
@@ -36,7 +32,7 @@ impl Session {
     }
 
     pub(crate) fn check_expiration(&self) -> bool {
-        get_timestamp() < self.expiration
+        OffsetDateTime::now_utc().unix_timestamp() < self.expiration
     }
 }
 

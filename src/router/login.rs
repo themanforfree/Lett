@@ -1,14 +1,21 @@
 use crate::database::models::establish_connection;
 use crate::database::models::session::{self, Session};
 use hyper::{header, Body, Method, Request, Response, StatusCode};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct Params<'a> {
+    username: &'a str,
+    password: &'a str,
+}
 
 fn check_login(username: &str, password: &str) -> bool {
     username == "admin" && password == "admin"
 }
 
 pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
-    match req.method() {
-        &Method::GET => {
+    match *req.method() {
+        Method::GET => {
             let from_html = r#"
         <!DOCTYPE html>
         <html lang="en">
@@ -32,13 +39,10 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
         "#;
             Some(Response::new(hyper::Body::from(from_html)))
         }
-        &Method::POST => {
-            let body = hyper::body::to_bytes(req.into_body()).await.unwrap();
-            let query =
-                serde_urlencoded::from_bytes::<Vec<(String, String)>>(body.as_ref()).unwrap();
-            let username = &query.iter().find(|(k, _)| k == "username").unwrap().1;
-            let password = &query.iter().find(|(k, _)| k == "password").unwrap().1;
-            if check_login(username, password) {
+        Method::POST => {
+            let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
+            let query = serde_urlencoded::from_bytes::<Params>(&body).ok()?;
+            if check_login(query.username, query.password) {
                 let session = Session::new();
 
                 let mut res = Response::new(Body::empty());
@@ -49,11 +53,13 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
                 );
                 match session.to_cookie() {
                     Ok(cookie) => {
+                        session::insert(&establish_connection(), &session).unwrap_or_else(|e| {
+                            panic!("{}", e);
+                        });
                         res.headers_mut().insert(
                             header::SET_COOKIE,
                             header::HeaderValue::from_str(&cookie).unwrap(),
                         );
-                        session::insert(&establish_connection(), &session).unwrap();
                     }
                     Err(e) => {
                         println!("{}", e)

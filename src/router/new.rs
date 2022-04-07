@@ -9,7 +9,7 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     let tmp = session::get_from_request(&conn, &req);
     match tmp {
         Some(s) if s.check_expiration() => {
-            let body = hyper::body::to_bytes(req.into_body()).await.unwrap();
+            let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
 
             let article = NewArticle::from(body);
             let insert_num = article::create(&conn, &article).unwrap_or_default();

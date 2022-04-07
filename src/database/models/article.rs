@@ -3,7 +3,6 @@ use anyhow::Result;
 use diesel::prelude::*;
 use hyper::body::Bytes;
 use serde::Deserialize;
-use std::collections::HashMap;
 use time::{Month, OffsetDateTime, Time, UtcOffset};
 
 #[derive(Queryable, QueryableByName, Debug)]
@@ -23,17 +22,17 @@ pub(crate) struct Article {
 pub(crate) struct NewArticle {
     title: String,
     content: String,
+    #[serde(default = "default_created")]
     created: i64,
+}
+
+fn default_created() -> i64 {
+    OffsetDateTime::now_utc().unix_timestamp()
 }
 
 impl From<Bytes> for NewArticle {
     fn from(body: Bytes) -> Self {
-        let query: HashMap<&str, &str> = serde_urlencoded::from_bytes(&body).unwrap();
-        NewArticle {
-            title: query["title"].to_string(),
-            content: query["content"].to_string(),
-            created: OffsetDateTime::now_utc().unix_timestamp(),
-        }
+        serde_urlencoded::from_bytes(&body).unwrap()
     }
 }
 
