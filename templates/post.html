@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% import "macros.html" as macros %}
+{% block title %}
+    {{ article.title }}
+{% endblock title %}
+{% block body %}
+    {{ macros::header() }}
+    <div>
+        <h2>{{ article.title }}</h2>
+        <br />
+        content:
+        <br />
+        <div id="markdown">{{ article.content| safe }}</div>
+    </div>
+{% endblock body %}

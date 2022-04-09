@@ -1,4 +1,3 @@
-use database::models::establish_connection;
 use hyper::{
     service::{make_service_fn, service_fn},
     Server,
@@ -15,7 +14,6 @@ mod router;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let _ = establish_connection();
     // TODO: parse config file
 
     if let Err(e) = router::init() {

@@ -13,9 +13,15 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
             let article = NewArticle::from(body);
 
-            article::create(&conn, &article).ok();
-            log::debug!("New article: {:?}", article);
-            Some(Response::new(Body::from(format!("{:#?}", article,))))
+            match article::create(&conn, &article) {
+                Ok(u) => Some(Response::new(Body::from(format!(
+                    "Crate {} article success",
+                    u
+                )))),
+                Err(_) => Some(Response::new(Body::from(format!("Crate article failed")))),
+            }
+            // log::debug!("New article: {:?}", article);
+            // Some(Response::new(Body::from(format!("{:#?}", article,))))
         }
         _ => {
             log::debug!("Post to new failed, Redirect to /login");

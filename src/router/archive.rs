@@ -1,5 +1,9 @@
-use crate::database::models::{article, establish_connection};
+use crate::{
+    database::models::{article, establish_connection},
+    router::{md2html, TEMPLATES},
+};
 use hyper::{Body, Request, Response};
+use tera::Context;
 
 pub(crate) async fn handle(_req: Request<Body>, year: &str, month: &str) -> Option<Response<Body>> {
     if year.len() != 4 || month.len() != 2 {
@@ -11,6 +15,18 @@ pub(crate) async fn handle(_req: Request<Body>, year: &str, month: &str) -> Opti
         return None;
     }
     log::debug!("Request archive page: year = {}, month = {}", year, month);
-    let articles = article::read_by_archive(&establish_connection(), year, month).ok()?;
-    Some(Response::new(Body::from(format!("{:#?}", articles))))
+    let mut articles = article::read_by_archive(&establish_connection(), year, month).ok()?;
+    for atc in articles.iter_mut() {
+        atc.content = md2html(&atc.content);
+    }
+    let mut content = Context::new();
+    content.insert("title", &format!("Archive: {}-{}", year, month));
+    content.insert("articles", &articles);
+
+    let body = TEMPLATES
+        .get()
+        .unwrap()
+        .render("list.html", &content)
+        .unwrap();
+    Some(Response::new(Body::from(body)))
 }

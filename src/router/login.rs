@@ -1,7 +1,9 @@
 use crate::database::models::establish_connection;
 use crate::database::models::session::{self, Session};
+use crate::router::TEMPLATES;
 use hyper::{header, Body, Method, Request, Response, StatusCode};
 use serde::Deserialize;
+use tera::Context;
 
 #[derive(Deserialize)]
 struct Params<'a> {
@@ -17,28 +19,12 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     match *req.method() {
         Method::GET => {
             log::debug!("Request login page");
-            let from_html = r#"
-        <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8" />
-                <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>Document</title>
-            </head>
-            <body>
-                <form action="/login" method="post">
-                    <h2>Login</h2>
-                    <input type="text" name="username" />
-                    <br />
-                    <input type="password" name="password" />
-                    <br />
-                    <button type="submit">submit</button>
-                </form>
-            </body>
-        </html>
-        "#;
-            Some(Response::new(hyper::Body::from(from_html)))
+            let body = TEMPLATES
+                .get()
+                .unwrap()
+                .render("login.html", &Context::new())
+                .unwrap();
+            Some(Response::new(hyper::Body::from(body)))
         }
         Method::POST => {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;

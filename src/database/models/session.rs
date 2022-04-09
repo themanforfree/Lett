@@ -19,7 +19,7 @@ impl Session {
         Self {
             sid: nanoid!(16),
             data: None,
-            expiration: OffsetDateTime::now_utc().unix_timestamp() + 5 * 60,
+            expiration: OffsetDateTime::now_utc().unix_timestamp() + 1800,
         }
     }
 

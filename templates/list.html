@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% import "macros.html" as macros %}
+{% block title %}
+    {{ title }}
+{% endblock title %}
+{% block body %}
+    {{ macros::header() }}
+    {% for article in articles %}
+        <div>
+            id:
+            <span>{{ article.aid }}</span>
+            <br />
+            title:
+            <a href="{{ url_for(id=article.aid) }}">{{ article.title }}</a>
+            <br />
+            content:
+            <span>{{ article.content| safe }}</span>
+            <br />
+        </div>
+        <br />
+    {% endfor %}
+{% endblock body %}

@@ -2,10 +2,10 @@ use crate::database::schema::articles;
 use anyhow::Result;
 use diesel::prelude::*;
 use hyper::body::Bytes;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use time::{Month, OffsetDateTime, Time, UtcOffset};
 
-#[derive(Queryable, QueryableByName, Debug)]
+#[derive(Queryable, QueryableByName, Debug, Serialize)]
 #[table_name = "articles"]
 #[allow(dead_code)]
 pub(crate) struct Article {
@@ -36,7 +36,12 @@ impl From<Bytes> for NewArticle {
     }
 }
 
-pub(crate) fn read(conn: &MysqlConnection) -> Result<Vec<Article>> {
+pub(crate) fn read_by_id(conn: &MysqlConnection, id: u32) -> Result<Article> {
+    use crate::database::schema::articles::dsl::*;
+    articles.find(id).first::<Article>(conn).map_err(Into::into)
+}
+
+pub(crate) fn read_all(conn: &MysqlConnection) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     articles
         .order(aid.desc())

@@ -2,7 +2,9 @@ use anyhow::{anyhow, Result};
 use hyper::{Body, Method, Request, Response};
 use matchit::Router;
 use once_cell::sync::OnceCell;
-use std::convert::Infallible;
+use pulldown_cmark::{html, Options, Parser};
+use std::{collections::HashMap, convert::Infallible};
+use tera::{to_value, Tera, Value};
 
 mod admin;
 mod archive;
@@ -10,10 +12,12 @@ mod delete;
 mod index;
 mod login;
 mod new;
+mod post;
 mod search;
 mod static_files;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
+static TEMPLATES: OnceCell<Tera> = OnceCell::new();
 
 enum RouterType {
     Index,
@@ -23,6 +27,14 @@ enum RouterType {
     New,
     Delete,
     Login,
+    Post,
+}
+
+pub(crate) fn md2html(md: &str) -> String {
+    let parser = Parser::new_ext(md, Options::all());
+    let mut output = String::new();
+    html::push_html(&mut output, parser);
+    output
 }
 
 pub(crate) fn init() -> Result<()> {
@@ -30,6 +42,8 @@ pub(crate) fn init() -> Result<()> {
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
     router.insert("/:year/:month/", RouterType::Archive)?;
+    router.insert("/post/:id", RouterType::Post)?;
+    router.insert("/post/:id/", RouterType::Post)?;
 
     router.insert("/search", RouterType::Search)?;
     router.insert("/admin", RouterType::Admin)?;
@@ -40,11 +54,19 @@ pub(crate) fn init() -> Result<()> {
     router.insert("/login", RouterType::Login)?;
     router.insert("/login/", RouterType::Login)?;
 
-    // TODO: route static files
-
     ROUTE_TABLE
         .set(router)
         .map_err(|_| anyhow!("Failed to initialize router"))?;
+
+    let mut tera = Tera::new("templates/**/*.html").expect("Failed to compile templates");
+    tera.register_function("url_for", |args: &HashMap<String, Value>| {
+        if let Some(id) = args.get("id") {
+            Ok(to_value(format!("/post/{}", &id)).unwrap())
+        } else {
+            Err("Some Err".into())
+        }
+    });
+    TEMPLATES.set(tera).unwrap();
     Ok(())
 }
 
@@ -64,6 +86,10 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
                 let month = matched.params.get("month")?.to_owned();
                 archive::handle(req, &year, &month).await
             }
+            (&Method::GET, RouterType::Post) => {
+                let id = matched.params.get("id")?.to_owned();
+                post::handle(req, &id).await
+            }
             _ => None,
         }
     } else {
@@ -77,7 +103,12 @@ pub(crate) async fn handle(req: Request<Body>) -> Result<Response<Body>, Infalli
         Some(res) => Ok(res),
         None => {
             log::debug!("Not Found: {}", path);
-            Ok(Response::new(hyper::Body::from("Not Found")))
+            let body = TEMPLATES
+                .get()
+                .unwrap()
+                .render("404.html", &tera::Context::new())
+                .unwrap();
+            Ok(Response::new(hyper::Body::from(body)))
         }
     }
 }
