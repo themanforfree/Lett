@@ -58,7 +58,7 @@ pub(crate) fn insert(conn: &MysqlConnection, session: &Session) -> Result<usize>
 pub(crate) fn get_from_request(conn: &MysqlConnection, req: &Request<Body>) -> Option<Session> {
     let cookie = req.headers().get("Cookie")?.to_str().ok()?;
     let id = cookie.split(';').find_map(|s| {
-        if s.starts_with("SESSIONID=") {
+        if s.trim().starts_with("SESSIONID=") {
             s.split_once('=').map(|(_, s)| s.trim())
         } else {
             None

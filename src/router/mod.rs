@@ -5,6 +5,7 @@ use once_cell::sync::OnceCell;
 use pulldown_cmark::{html, Options, Parser};
 use std::{collections::HashMap, convert::Infallible};
 use tera::{to_value, Tera, Value};
+use time::{macros::format_description, OffsetDateTime, UtcOffset};
 
 mod admin;
 mod archive;
@@ -62,6 +63,21 @@ pub(crate) fn init() -> Result<()> {
     tera.register_function("url_for", |args: &HashMap<String, Value>| {
         if let Some(id) = args.get("id") {
             Ok(to_value(format!("/post/{}", &id)).unwrap())
+        } else {
+            Err("Some Err".into())
+        }
+    });
+    tera.register_function("timestamp2time", |args: &HashMap<String, Value>| {
+        if let Some(timestamp) = args.get("timestamp") {
+            let timestamp = timestamp.as_i64().unwrap();
+            let fmt = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
+            let time = OffsetDateTime::from_unix_timestamp(timestamp)
+                .unwrap()
+                .to_offset(UtcOffset::from_hms(8, 0, 0).unwrap())
+                .format(&fmt)
+                .unwrap();
+
+            Ok(to_value(time).unwrap())
         } else {
             Err("Some Err".into())
         }

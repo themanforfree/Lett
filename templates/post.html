@@ -1,10 +1,8 @@
-{% extends "layout.html" %}
-{% import "macros.html" as macros %}
+{% extends "layout_guest.html" %}
 {% block title %}
     {{ article.title }}
 {% endblock title %}
 {% block body %}
-    {{ macros::header() }}
     <div>
         <h2>{{ article.title }}</h2>
         <br />
