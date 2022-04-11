@@ -1,5 +1,7 @@
-use crate::database::models::establish_connection;
-use crate::database::models::session::{self, Session};
+use crate::database::{
+    establish_connection,
+    models::session::{self, Session},
+};
 use crate::router::TEMPLATES;
 use hyper::{header, Body, Method, Request, Response, StatusCode};
 use serde::Deserialize;

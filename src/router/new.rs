@@ -1,6 +1,9 @@
-use crate::database::models::{
-    article::{self, NewArticle},
-    establish_connection, session,
+use crate::database::{
+    establish_connection,
+    models::{
+        article::{self, NewArticle},
+        session,
+    },
 };
 use hyper::{header, Body, Request, Response, StatusCode};
 

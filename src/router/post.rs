@@ -1,5 +1,5 @@
 use crate::{
-    database::models::{article, establish_connection},
+    database::{establish_connection, models::article},
     router::{md2html, TEMPLATES},
 };
 use hyper::{Body, Request, Response};

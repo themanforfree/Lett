@@ -15,6 +15,10 @@ mod router;
 async fn main() {
     env_logger::init();
     // TODO: parse config file
+    if let Err(e) = database::init() {
+        eprintln!("Failed to initialize database: {}", e);
+        std::process::exit(1);
+    }
 
     if let Err(e) = router::init() {
         eprintln!("Failed to initialize router: {}", e);

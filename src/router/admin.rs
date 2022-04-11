@@ -1,5 +1,5 @@
 use crate::{
-    database::models::{establish_connection, session},
+    database::{establish_connection, models::session},
     router::TEMPLATES,
 };
 use hyper::{header, Body, Request, Response, StatusCode};

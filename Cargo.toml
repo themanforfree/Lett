@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-diesel = { version = "1.4", features = ["mysql", "chrono"] }
+diesel = { version = "1.4", features = ["mysql", "chrono", "r2d2"] }
 hyper = { version = "0.14", features = ["server", "http1", "http2", "tcp"] }
 matchit = "0.5"
 tera = { version = "1.15", default-features = false }
@@ -21,6 +21,7 @@ serde_urlencoded = "0.7"
 nanoid = "0.4"
 time = { version = "0.3", features = ["formatting", "macros"] }
 pulldown-cmark = "0.9.1"
+# r2d2 = "0.8.9"
 
 [profile.release]
 lto = true
