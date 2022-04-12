@@ -1,5 +1,4 @@
 -- Your SQL goes here
-DROP TABLE IF EXISTS articles;
 CREATE TABLE articles(
   aid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   title VARCHAR(150) NOT NULL,

@@ -7,6 +7,8 @@ use std::{convert::Infallible, net::SocketAddr};
 
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 mod database;
 mod router;
@@ -15,6 +17,7 @@ mod router;
 async fn main() {
     env_logger::init();
     // TODO: parse config file
+
     if let Err(e) = database::init() {
         eprintln!("Failed to initialize database: {}", e);
         std::process::exit(1);

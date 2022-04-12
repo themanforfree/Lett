@@ -14,14 +14,9 @@
 
 ## 使用
 
-初始化数据库    
-
-可以手动创建或使用 `diesel` 工具创建
-
-SQL语句均保存于 [migrations](migrations) 目录下  
-```bash
-diesel setup
-diesel migration run
+创建数据库,在 `MySQL` 中执行sql语句
+```SQL
+CREATE DATABASE database_name;
 ```
 
 安装依赖   
