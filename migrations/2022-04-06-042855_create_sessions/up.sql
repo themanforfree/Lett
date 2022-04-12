@@ -1,5 +1,5 @@
 -- Your SQL goes here
-CREATE TABLE sessions(
+CREATE TABLE IF NOT EXISTS sessions(
   sid VARCHAR(255) NOT NULL,
   data TEXT DEFAULT NULL,
   expiration BIGINT NOT NULL,
