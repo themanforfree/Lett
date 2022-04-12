@@ -1,0 +1,16 @@
+.mdui-drawer {
+    top: 64px;
+    background-color: #fafafa;
+}
+
+.box {
+    height: 64px;
+}
+
+.mdui-textfield-expandable.mdui-textfield-expanded {
+    width: 30%;
+}
+
+a {
+    text-decoration: none;
+}

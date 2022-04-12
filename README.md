@@ -1,4 +1,4 @@
-# no name
+# lett
 
 一个用 RUST 实现的简易博客系统
 
@@ -44,7 +44,7 @@ export DATABASE_URL=mysql://[username]:[password]@locakhost/database_name
 
 运行
 ```bash
-no_name
+lett
 ```
 
 ## TODO
