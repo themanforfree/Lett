@@ -1,23 +1,22 @@
 {% extends "layout_guest.html" %}
 {% block title %}
-    {{ title }}
+{{ title }}
 {% endblock title %}
 {% block body %}
-    <div class="mdui-container">
-        <div class="box"></div>
-        {% for article in articles %}
-            <div class="mdui-card mdui-hoverable mdui-m-y-3">
-                <div class="mdui-card-primary">
-                    <div class="mdui-card-primary-title">
-                        <a class="mdui-text-color-theme-accent"
-                           href="{{ url_for(id=article.aid) }}">{{ article.title }}</a>
-                    </div>
-                    <div class="mdui-card-primary-subtitle mdui-text-color-theme-text">
-                        {{ timestamp2time(timestamp = article.created) }}
-                    </div>
-                </div>
-                <div class="mdui-card-content mdui-typo">{{ article.content | safe }}</div>
-            </div>
-        {% endfor %}
+
+
+{% for article in articles %}
+<div class="mdui-card mdui-hoverable mdui-m-y-3">
+    <div class="mdui-card-primary">
+        <div class="mdui-card-primary-title">
+            <a class="mdui-text-color-theme-accent" href="{{ url_for(id=article.aid) }}">{{ article.title }}</a>
+        </div>
+        <div class="mdui-card-primary-subtitle mdui-text-color-theme-text">
+            {{ timestamp2time(timestamp = article.created) }}
+        </div>
     </div>
+    <div class="mdui-card-content mdui-typo">{{ article.content | safe }}</div>
+</div>
+{% endfor %}
+
 {% endblock body %}

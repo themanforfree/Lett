@@ -4,8 +4,10 @@ use matchit::Router;
 use once_cell::sync::OnceCell;
 use pulldown_cmark::{html, Options, Parser};
 use std::{collections::HashMap, convert::Infallible};
-use tera::{to_value, Tera, Value};
+use tera::{to_value, Context, Tera, Value};
 use time::{macros::format_description, OffsetDateTime, UtcOffset};
+
+use crate::{config::Site, TIMEZONE};
 
 mod admin;
 mod archive;
@@ -19,7 +21,7 @@ mod static_files;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 static TEMPLATES: OnceCell<Tera> = OnceCell::new();
-
+static SITE: OnceCell<Site> = OnceCell::new();
 enum RouterType {
     Index,
     Archive,
@@ -38,7 +40,7 @@ pub(crate) fn md2html(md: &str) -> String {
     output
 }
 
-pub(crate) fn init() -> Result<()> {
+pub(crate) fn init(cfg: Site) -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
@@ -67,14 +69,18 @@ pub(crate) fn init() -> Result<()> {
             Err("Some Err".into())
         }
     });
-    tera.register_function("timestamp2time", |args: &HashMap<String, Value>| {
+
+    let fmt_tz = format_description!("[offset_hour]:[offset_minute]");
+    let timezone = TIMEZONE.get().unwrap();
+    let offset = UtcOffset::parse(timezone, fmt_tz).unwrap();
+    tera.register_function("timestamp2time", move |args: &HashMap<String, Value>| {
         if let Some(timestamp) = args.get("timestamp") {
             let timestamp = timestamp.as_i64().unwrap();
-            let fmt = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
+            let fmt_datetime = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
             let time = OffsetDateTime::from_unix_timestamp(timestamp)
                 .unwrap()
-                .to_offset(UtcOffset::from_hms(8, 0, 0).unwrap())
-                .format(&fmt)
+                .to_offset(offset)
+                .format(&fmt_datetime)
                 .unwrap();
 
             Ok(to_value(time).unwrap())
@@ -83,6 +89,7 @@ pub(crate) fn init() -> Result<()> {
         }
     });
     TEMPLATES.set(tera).unwrap();
+    SITE.set(cfg).unwrap();
     Ok(())
 }
 
@@ -119,10 +126,12 @@ pub(crate) async fn handle(req: Request<Body>) -> Result<Response<Body>, Infalli
         Some(res) => Ok(res),
         None => {
             log::debug!("Not Found: {}", path);
+            let mut context = Context::new();
+            context.insert("site", &SITE.get().unwrap());
             let body = TEMPLATES
                 .get()
                 .unwrap()
-                .render("404.html", &tera::Context::new())
+                .render("404.html", &context)
                 .unwrap();
             Ok(Response::new(hyper::Body::from(body)))
         }

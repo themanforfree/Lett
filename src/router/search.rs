@@ -1,6 +1,6 @@
 use crate::{
     database::{establish_connection, models::article},
-    router::{md2html, TEMPLATES},
+    router::{md2html, SITE, TEMPLATES},
 };
 use hyper::{Body, Request, Response};
 use serde::Deserialize;
@@ -21,7 +21,10 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     }
     log::debug!("Request search page: keyword = {}", params.keyword);
     let mut content = Context::new();
-    content.insert("title", &format!("Search"));
+
+    let site = SITE.get().unwrap();
+    content.insert("site", &site);
+    content.insert("title", "Search");
     content.insert("articles", &articles);
 
     let body = TEMPLATES

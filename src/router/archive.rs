@@ -1,6 +1,6 @@
 use crate::{
     database::{establish_connection, models::article},
-    router::{md2html, TEMPLATES},
+    router::{md2html, SITE, TEMPLATES},
 };
 use hyper::{Body, Request, Response};
 use tera::Context;
@@ -19,7 +19,10 @@ pub(crate) async fn handle(_req: Request<Body>, year: &str, month: &str) -> Opti
     for atc in articles.iter_mut() {
         atc.content = md2html(&atc.content);
     }
+
+    let site = SITE.get().unwrap();
     let mut content = Context::new();
+    content.insert("site", &site);
     content.insert("title", &format!("Archive: {}-{}", year, month));
     content.insert("articles", &articles);
 

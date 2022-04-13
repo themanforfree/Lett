@@ -1,9 +1,9 @@
-use crate::database::schema::articles;
+use crate::{database::schema::articles, TIMEZONE};
 use anyhow::Result;
 use diesel::prelude::*;
 use hyper::body::Bytes;
 use serde::{Deserialize, Serialize};
-use time::{Month, OffsetDateTime, Time, UtcOffset};
+use time::{macros::format_description, OffsetDateTime};
 
 #[derive(Queryable, QueryableByName, Debug, Serialize)]
 #[table_name = "articles"]
@@ -55,7 +55,7 @@ fn get_start_and_end_of_month(year: i32, month: u8) -> Result<(i64, i64)> {
             1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
             4 | 6 | 9 | 11 => 30,
             2 => {
-                if year % 4 == 0 {
+                if year % 4 == 0 && (year % 100 != 0 || year % 400 == 0) {
                     29
                 } else {
                     28
@@ -64,19 +64,29 @@ fn get_start_and_end_of_month(year: i32, month: u8) -> Result<(i64, i64)> {
             _ => 255,
         }
     };
-    let start_timestamp = OffsetDateTime::UNIX_EPOCH
-        .replace_offset(UtcOffset::from_hms(8, 0, 0)?)
-        .replace_year(year)?
-        .replace_month(Month::try_from(month)?)?
-        .replace_day(1)?
-        .unix_timestamp();
-    let end_timestamp = OffsetDateTime::UNIX_EPOCH
-        .replace_offset(UtcOffset::from_hms(8, 0, 0)?)
-        .replace_year(year)?
-        .replace_month(Month::try_from(month)?)?
-        .replace_day(days(year, month))?
-        .replace_time(Time::from_hms(23, 59, 59)?)
-        .unix_timestamp();
+
+    let timezone = TIMEZONE.get().unwrap();
+    let fmt = format_description!(
+        "[year]-[month]-[day] [hour]:[minute]:[second] [offset_hour]:[offset_minute]"
+    );
+
+    let start_timestamp = OffsetDateTime::parse(
+        &format!("{}-{:02}-01 00:00:00 {}", year, month, timezone),
+        fmt,
+    )?
+    .unix_timestamp();
+
+    let end_timestamp = OffsetDateTime::parse(
+        &format!(
+            "{}-{:02}-{} 23:59:59 {}",
+            year,
+            month,
+            days(year, month),
+            timezone
+        ),
+        fmt,
+    )?
+    .unix_timestamp();
     Ok((start_timestamp, end_timestamp))
 }
 
@@ -89,6 +99,7 @@ pub(crate) fn read_by_archive(
     let (start, end) = get_start_and_end_of_month(year, month)?;
     articles
         .filter(created.between(start, end))
+        .order(aid.desc())
         .load::<Article>(conn)
         .map_err(Into::into)
 }
@@ -97,6 +108,7 @@ pub(crate) fn search(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Articl
     use crate::database::schema::articles::dsl::*;
     articles
         .filter(content.like(format!("%{}%", keyword)))
+        .order(aid.desc())
         .load::<Article>(conn)
         .map_err(Into::into)
 }

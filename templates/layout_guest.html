@@ -18,7 +18,8 @@
             <a onclick="toggle_drawer()" class="mdui-btn mdui-btn-icon">
                 <i class="mdui-icon material-icons">menu</i>
             </a>
-            <span class="mdui-typo-title">My Blog</span>
+            <a class="mdui-typo-headline" href={{ site.url }}>{{ site.name }}</a>
+
             <div class="mdui-toolbar-spacer"></div>
             <div class="mdui-textfield mdui-textfield-expandable">
                 <button class="mdui-textfield-icon mdui-btn mdui-btn-icon">
@@ -73,8 +74,11 @@
             </li>
         </ul>
     </div>
-    {% block body %}
-    {% endblock body %}
+    <div class="mdui-container">
+        <div class="box"></div>
+        {% block body %}
+        {% endblock body %}
+    </div>
     <script src="/main.js"></script>
 </body>
 

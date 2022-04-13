@@ -1,0 +1,23 @@
+[application]
+
+# The socket address to bind
+listen = "0.0.0.0:3000"
+
+# TimeZone
+timezone = "+08:00"
+
+[database]
+
+# Database url
+url = "mysql://username:password@localhost/database_name"
+
+[site]
+
+# The site name
+name = "Example Name"
+
+# The site URL
+url = "http://example.com"
+
+# The site description
+description = "Example Description"

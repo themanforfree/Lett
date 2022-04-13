@@ -3,9 +3,10 @@ use diesel::{
     r2d2::{ConnectionManager, Pool, PooledConnection},
     MysqlConnection,
 };
-use dotenv::dotenv;
+
 use once_cell::sync::OnceCell;
-use std::env;
+
+use crate::config;
 
 pub(crate) mod models;
 mod schema;
@@ -15,10 +16,8 @@ static CONNECTION_POOL: OnceCell<MysqlPool> = OnceCell::new();
 
 embed_migrations!();
 
-pub(crate) fn init() -> Result<()> {
-    dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+pub(crate) fn init(cfg: config::Database) -> Result<()> {
+    let manager = ConnectionManager::<MysqlConnection>::new(cfg.url);
     let pool: MysqlPool = Pool::builder().test_on_check_out(true).build(manager)?;
     embedded_migrations::run(&pool.get()?)?;
     CONNECTION_POOL
