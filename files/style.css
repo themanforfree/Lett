@@ -14,3 +14,12 @@
 a {
     text-decoration: none;
 }
+
+/* center div by top50 and left 50*/
+.center {
+    min-width: 500px;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}

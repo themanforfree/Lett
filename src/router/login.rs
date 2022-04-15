@@ -24,7 +24,7 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
             let body = TEMPLATES
                 .get()
                 .unwrap()
-                .render("login.html", &Context::new())
+                .render("admin/login.html", &Context::new())
                 .unwrap();
             Some(Response::new(hyper::Body::from(body)))
         }

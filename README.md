@@ -10,6 +10,7 @@
 * [X] 使用 mysql 数据库保存数据
 * [X] 后台管理页面，快速发布或修改文章
 * [X] 静态文件路由
+* [X] 配置文件
 
 
 ## 使用
@@ -23,7 +24,7 @@ CREATE DATABASE database_name;
 
 ```bash
 # Debian/Ubuntu
-apt install libmysqlclient-dev
+apt install * [ ] 配置文件
 ```
 
 程序同级目录创建 .env 文件
@@ -44,7 +45,6 @@ lett
 
 ## TODO
 
-* [ ] 配置文件
 * [ ] 评论
 * [ ] tls 支持
 

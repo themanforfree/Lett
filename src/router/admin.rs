@@ -12,7 +12,7 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
             let body = TEMPLATES
                 .get()
                 .unwrap()
-                .render("admin.html", &Context::new())
+                .render("admin/admin.html", &Context::new())
                 .unwrap();
             Some(Response::new(Body::from(body)))
         }

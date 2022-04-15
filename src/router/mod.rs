@@ -18,6 +18,7 @@ mod new;
 mod post;
 mod search;
 mod static_files;
+mod update;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 static TEMPLATES: OnceCell<Tera> = OnceCell::new();
@@ -31,6 +32,7 @@ enum RouterType {
     Delete,
     Login,
     Post,
+    Update,
 }
 
 pub(crate) fn md2html(md: &str) -> String {
@@ -54,6 +56,7 @@ pub(crate) fn init(cfg: Site) -> Result<()> {
 
     router.insert("/new", RouterType::New)?;
     router.insert("/delete", RouterType::Delete)?;
+    router.insert("/update", RouterType::Update)?;
     router.insert("/login", RouterType::Login)?;
     router.insert("/login/", RouterType::Login)?;
 
@@ -100,6 +103,7 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
         match (req.method(), matched.value) {
             (&Method::POST, RouterType::New) => new::handle(req).await,
             (&Method::POST, RouterType::Delete) => delete::handle(req).await,
+            (&Method::POST, RouterType::Update) => update::handle(req).await,
             (&Method::GET, RouterType::Search) => search::handle(req).await,
             (&Method::GET, RouterType::Admin) => admin::handle(req).await,
             (&Method::GET, RouterType::Index) => index::handle(req).await,

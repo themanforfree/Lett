@@ -1,0 +1,20 @@
+{% extends "admin/layout_admin.html" %}
+{% block title %}
+Admin Panel
+{% endblock title %}
+{% block body %}
+<form action="/new" method="post">
+    <h2>New Article</h2>
+    <input type="text" name="title" />
+    <br />
+    <textarea name="content" rows="10"></textarea>
+    <br />
+    <button type="submit">submit</button>
+</form>
+<form action="/delete" method="post">
+    <h2>Delete Article</h2>
+    <input type="text" name="aid" />
+    <br />
+    <button type="submit">submit</button>
+</form>
+{% endblock body %}

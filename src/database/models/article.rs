@@ -5,7 +5,7 @@ use hyper::body::Bytes;
 use serde::{Deserialize, Serialize};
 use time::{macros::format_description, OffsetDateTime};
 
-#[derive(Queryable, QueryableByName, Debug, Serialize)]
+#[derive(Queryable, QueryableByName, Debug, Serialize, AsChangeset, Deserialize)]
 #[table_name = "articles"]
 #[allow(dead_code)]
 pub(crate) struct Article {
@@ -15,6 +15,12 @@ pub(crate) struct Article {
     pub(crate) created: i64,
     pub(crate) published: bool,
     pub(crate) comments_num: i32,
+}
+
+impl From<Bytes> for Article {
+    fn from(body: Bytes) -> Self {
+        serde_urlencoded::from_bytes(&body).unwrap()
+    }
 }
 
 #[derive(Insertable, AsChangeset, Deserialize, Debug)]
@@ -124,6 +130,14 @@ pub(crate) fn create(conn: &MysqlConnection, article: &NewArticle) -> Result<usi
 pub(crate) fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
     use crate::database::schema::articles::dsl::*;
     diesel::delete(articles.filter(aid.eq(id)))
+        .execute(conn)
+        .map_err(Into::into)
+}
+
+pub(crate) fn update(conn: &MysqlConnection, article: &Article) -> Result<usize> {
+    use crate::database::schema::articles::dsl::*;
+    diesel::update(articles.find(article.aid))
+        .set(article)
         .execute(conn)
         .map_err(Into::into)
 }

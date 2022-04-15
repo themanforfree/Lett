@@ -1,0 +1,29 @@
+{% extends "admin/layout_admin.html" %}
+{% block title %}
+Login
+{% endblock title %}
+{% block body %}
+<div class="center">
+    <div class="mdui-card">
+        <form action="/login" method="post">
+            <!-- 卡片的内容 -->
+            <div class="mdui-card-content">
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                    <label class="mdui-textfield-label">username</label>
+                    <input class="mdui-textfield-input" type="text" name="username" />
+                </div>
+
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                    <label class="mdui-textfield-label">password</label>
+                    <input class="mdui-textfield-input" type="password" name="password" />
+                </div>
+
+            </div>
+            <!-- 卡片的按钮 -->
+            <div class="mdui-card-actions">
+                <button class="mdui-btn mdui-ripple" type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}

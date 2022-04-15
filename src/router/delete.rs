@@ -18,12 +18,37 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
         Some(s) if s.check_expiration() => {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
             let aid = serde_urlencoded::from_bytes::<Params>(&body).ok()?.aid;
-            let n = article::delete(&conn, aid).unwrap_or_default();
-            match n {
-                0 => log::debug!("Delete article failed, aid = {}", aid),
-                _ => log::debug!("Delete article success, aid = {}", aid),
-            };
-            Some(Response::new(Body::from(format!("{}", n))))
+            match article::delete(&conn, aid) {
+                Ok(n) if n == 0 => {
+                    log::debug!("Delete article failed, aid = {}", aid);
+                    Some(
+                        Response::builder()
+                            .status(StatusCode::INTERNAL_SERVER_ERROR)
+                            .body(Body::from(format!("Not found article has id {}", aid)))
+                            .unwrap(),
+                    )
+                }
+                Ok(_) => {
+                    log::debug!("Delete article success, aid = {}", aid);
+                    Some(
+                        Response::builder()
+                            .status(StatusCode::OK)
+                            .header(header::CONTENT_TYPE, "text/plain")
+                            .body(Body::from("Delete article success"))
+                            .unwrap(),
+                    )
+                }
+                Err(e) => {
+                    log::debug!("Delete article failed, aid = {}", aid);
+                    Some(
+                        Response::builder()
+                            .status(StatusCode::INTERNAL_SERVER_ERROR)
+                            .header(header::CONTENT_TYPE, "text/plain")
+                            .body(Body::from(format!("{}", e)))
+                            .unwrap(),
+                    )
+                }
+            }
         }
         _ => {
             log::debug!("Post to delete failed, Redirect to /login");
