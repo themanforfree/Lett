@@ -7,7 +7,10 @@ use std::{collections::HashMap, convert::Infallible};
 use tera::{to_value, Context, Tera, Value};
 use time::{macros::format_description, OffsetDateTime, UtcOffset};
 
-use crate::{config::Site, TIMEZONE};
+use crate::{
+    config::{Config, Site},
+    TIMEZONE,
+};
 
 mod admin;
 mod archive;
@@ -42,7 +45,7 @@ pub(crate) fn md2html(md: &str) -> String {
     output
 }
 
-pub(crate) fn init(cfg: Site) -> Result<()> {
+pub(crate) fn init(cfg: &Config) -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
@@ -92,7 +95,7 @@ pub(crate) fn init(cfg: Site) -> Result<()> {
         }
     });
     TEMPLATES.set(tera).unwrap();
-    SITE.set(cfg).unwrap();
+    SITE.set(cfg.site.clone()).unwrap();
     Ok(())
 }
 

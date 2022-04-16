@@ -6,6 +6,15 @@ listen = "0.0.0.0:3000"
 # TimeZone
 timezone = "+08:00"
 
+# enable/disable tls
+tls = true
+
+# certificate file path
+certs = "./sample.pem"
+
+# key file path
+key = "./sample.rsa"
+
 [database]
 
 # Database url

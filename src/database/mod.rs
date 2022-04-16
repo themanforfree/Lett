@@ -6,7 +6,7 @@ use diesel::{
 
 use once_cell::sync::OnceCell;
 
-use crate::config;
+use crate::config::Config;
 
 pub(crate) mod models;
 mod schema;
@@ -16,8 +16,8 @@ static CONNECTION_POOL: OnceCell<MysqlPool> = OnceCell::new();
 
 embed_migrations!();
 
-pub(crate) fn init(cfg: config::Database) -> Result<()> {
-    let manager = ConnectionManager::<MysqlConnection>::new(cfg.url);
+pub(crate) fn init(cfg: &Config) -> Result<()> {
+    let manager = ConnectionManager::<MysqlConnection>::new(&cfg.database.url);
     let pool: MysqlPool = Pool::builder().test_on_check_out(true).build(manager)?;
     embedded_migrations::run(&pool.get()?)?;
     CONNECTION_POOL

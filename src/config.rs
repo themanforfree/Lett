@@ -21,6 +21,9 @@ pub struct Config {
 pub struct Application {
     pub listen: SocketAddr,
     pub timezone: String,
+    pub tls: bool,
+    pub certs: String,
+    pub key: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -28,7 +31,7 @@ pub struct Database {
     pub url: String,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct Site {
     pub name: String,
     pub url: String,

@@ -11,6 +11,7 @@
 * [X] 后台管理页面，快速发布或修改文章
 * [X] 静态文件路由
 * [X] 配置文件
+* [X] tls 支持
 
 
 ## 使用
@@ -46,7 +47,6 @@ lett
 ## TODO
 
 * [ ] 评论
-* [ ] tls 支持
 
 ## License
 GNU General Public License v3.0

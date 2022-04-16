@@ -1,10 +1,7 @@
 use crate::config::Config;
-use hyper::{
-    service::{make_service_fn, service_fn},
-    Server,
-};
+
 use once_cell::sync::OnceCell;
-use std::{convert::Infallible, env};
+use std::env;
 
 #[macro_use]
 extern crate diesel;
@@ -14,6 +11,7 @@ extern crate diesel_migrations;
 mod config;
 mod database;
 mod router;
+mod server;
 
 static TIMEZONE: OnceCell<String> = OnceCell::new();
 
@@ -30,23 +28,17 @@ async fn main() {
         }
     };
 
-    if let Err(e) = database::init(config.database) {
+    if let Err(e) = database::init(&config) {
         log::error!("Failed to initialize database: {}", e);
         std::process::exit(1);
     }
 
-    if let Err(e) = router::init(config.site) {
+    if let Err(e) = router::init(&config) {
         log::error!("Failed to initialize router: {}", e);
         std::process::exit(1);
     }
 
-    let addr = config.application.listen;
-    let make_service =
-        make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(router::handle)) });
-
-    let server = Server::bind(&addr).serve(make_service);
-    log::info!("Listening on http://{}", addr);
-    if let Err(e) = server.await {
+    if let Err(e) = server::run(&config).await {
         eprintln!("server error: {}", e);
     }
 }
