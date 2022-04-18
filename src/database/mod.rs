@@ -14,12 +14,10 @@ mod schema;
 type MysqlPool = Pool<ConnectionManager<MysqlConnection>>;
 static CONNECTION_POOL: OnceCell<MysqlPool> = OnceCell::new();
 
-embed_migrations!();
-
 pub(crate) fn init(cfg: &Config) -> Result<()> {
     let manager = ConnectionManager::<MysqlConnection>::new(&cfg.database.url);
     let pool: MysqlPool = Pool::builder().test_on_check_out(true).build(manager)?;
-    embedded_migrations::run(&pool.get()?)?;
+
     CONNECTION_POOL
         .set(pool)
         .map_err(|_| anyhow!("CONNECTION_POOL set failed"))

@@ -43,7 +43,9 @@ pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
                 );
                 match session.to_cookie() {
                     Ok(cookie) => {
-                        session::insert(&establish_connection(), &session).unwrap();
+                        if let Err(e) = session::insert(&establish_connection(), &session) {
+                            log::error!("Failed to insert session: {}", e);
+                        }
                         res.headers_mut().insert(
                             header::SET_COOKIE,
                             header::HeaderValue::from_str(&cookie).unwrap(),

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use diesel::{Connection, MysqlConnection};
 use getopts::Options;
 use serde::{Deserialize, Serialize};
 use std::{env::ArgsOs, fs, net::SocketAddr};
@@ -33,11 +34,13 @@ pub struct Site {
     pub description: String,
 }
 
+embed_migrations!();
+
 impl Config {
     pub fn parse(args: ArgsOs) -> Result<Config> {
         let mut opts = Options::new();
         opts.optopt("c", "config", "read config from file", "CONFIG_PATH");
-
+        opts.optflag("", "install", "create database");
         let matches = opts.parse(args.skip(1))?;
 
         let config_path = matches
@@ -46,6 +49,13 @@ impl Config {
 
         let config_str = fs::read_to_string(&config_path)?;
         let config: Config = toml::from_str(&config_str)?;
+
+        if matches.opt_present("install") {
+            let conn = MysqlConnection::establish(&config.database.url)?;
+            embedded_migrations::run(&conn)?;
+            println!("Database initialized");
+            std::process::exit(1);
+        }
 
         TIMEZONE.set(config.application.timezone.clone()).unwrap();
         Ok(config)
