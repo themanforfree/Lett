@@ -1,12 +1,7 @@
 use anyhow::Result;
-use dotenv::dotenv;
 use getopts::Options;
 use serde::{Deserialize, Serialize};
-use std::{
-    env::{self, ArgsOs},
-    fs,
-    net::SocketAddr,
-};
+use std::{env::ArgsOs, fs, net::SocketAddr};
 
 use crate::TIMEZONE;
 
@@ -40,8 +35,6 @@ pub struct Site {
 
 impl Config {
     pub fn parse(args: ArgsOs) -> Result<Config> {
-        dotenv().ok();
-
         let mut opts = Options::new();
         opts.optopt("c", "config", "read config from file", "CONFIG_PATH");
 
@@ -52,11 +45,8 @@ impl Config {
             .unwrap_or_else(|| "config.toml".to_string());
 
         let config_str = fs::read_to_string(&config_path)?;
-        let mut config: Config = toml::from_str(&config_str)?;
+        let config: Config = toml::from_str(&config_str)?;
 
-        if let Ok(url) = env::var("DATABASE_URL") {
-            config.database.url = url;
-        }
         TIMEZONE.set(config.application.timezone.clone()).unwrap();
         Ok(config)
     }

@@ -3,3 +3,4 @@
 .vscode
 sample.pem
 sample.rsa
+config.toml
