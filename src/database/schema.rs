@@ -10,6 +10,18 @@ table! {
 }
 
 table! {
+    comments (cid) {
+        cid -> Unsigned<Integer>,
+        aid -> Unsigned<Integer>,
+        author -> Varchar,
+        email -> Varchar,
+        url -> Nullable<Varchar>,
+        text -> Text,
+        created -> Bigint,
+    }
+}
+
+table! {
     sessions (sid) {
         sid -> Varchar,
         data -> Nullable<Text>,
@@ -17,4 +29,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(articles, sessions,);
+allow_tables_to_appear_in_same_query!(articles, comments, sessions,);

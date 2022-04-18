@@ -14,6 +14,7 @@ use crate::{
 
 mod admin;
 mod archive;
+mod comment;
 mod delete;
 mod index;
 mod login;
@@ -36,6 +37,7 @@ enum RouterType {
     Login,
     Post,
     Update,
+    Comment,
 }
 
 pub(crate) fn md2html(md: &str) -> String {
@@ -62,6 +64,7 @@ pub(crate) fn init(cfg: &Config) -> Result<()> {
     router.insert("/update", RouterType::Update)?;
     router.insert("/login", RouterType::Login)?;
     router.insert("/login/", RouterType::Login)?;
+    router.insert("/comment", RouterType::Comment)?;
 
     ROUTE_TABLE
         .set(router)
@@ -107,6 +110,7 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
             (&Method::POST, RouterType::New) => new::handle(req).await,
             (&Method::POST, RouterType::Delete) => delete::handle(req).await,
             (&Method::POST, RouterType::Update) => update::handle(req).await,
+            (&Method::POST, RouterType::Comment) => comment::handle(req).await,
             (&Method::GET, RouterType::Search) => search::handle(req).await,
             (&Method::GET, RouterType::Admin) => admin::handle(req).await,
             (&Method::GET, RouterType::Index) => index::handle(req).await,

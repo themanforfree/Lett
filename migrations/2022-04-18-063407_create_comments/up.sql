@@ -1,0 +1,11 @@
+-- Your SQL goes here
+CREATE TABLE comments(
+  cid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  aid INT(10) UNSIGNED NOT NULL,
+  author VARCHAR(50) NOT NULL,
+  email VARCHAR(50) NOT NULL,
+  url VARCHAR(255),
+  text TEXT NOT NULL,
+  created BIGINT NOT NULL,
+  PRIMARY KEY (cid)
+);

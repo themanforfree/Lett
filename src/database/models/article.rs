@@ -7,7 +7,7 @@ use time::{macros::format_description, OffsetDateTime};
 
 #[derive(Queryable, QueryableByName, Debug, Serialize, AsChangeset, Deserialize)]
 #[table_name = "articles"]
-#[allow(dead_code)]
+
 pub(crate) struct Article {
     pub(crate) aid: u32,
     pub(crate) title: String,

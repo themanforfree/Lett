@@ -14,4 +14,73 @@
     </div>
     <div class="mdui-card-content mdui-typo">{{ article.content | safe }}</div>
 </div>
+
+
+{% for comment in comments %}
+<div class="mdui-card mdui-m-y-3">
+    <div class="mdui-card-header">
+        <div class="mdui-card-header-avatar"><img class="avatar" src="https://gravatar.loli.net/avatar/"
+                alt="{{ comment.author }}" width="40" height="40"></div>
+        <div class="mdui-card-header-title mdui-text-color-theme-accent">
+            {% if comment.url %}
+            <a href="{{ comment.url }}" rel="external nofollow"> {{ comment.author }}</a>
+            {% else %}
+            {{ comment.author }}
+            {% endif %}
+        </div>
+        <div class="mdui-card-header-subtitle"> {{ timestamp2time(timestamp = comment.created) }}</div>
+    </div>
+    <div class="mdui-card-content mdui-typo">
+        {{ comment.text | safe }}
+    </div>
+    <a href="javascript:;">
+        <div class="mdui-card-actions">
+            <button class="mdui-btn mdui-ripple mdui-text-color-theme-accent">回复</button>
+        </div>
+    </a>
+</div>
+{% endfor %}
+
+
+<div class="mdui-card mdui-m-y-3">
+    <form method="post" action="/comment" id="comment-form" role="form">
+        <input name="aid" id="aid" value="{{ article.aid }}" hidden>
+        <div class="mdui-card-header">
+            <h2>添加新评论</h2>
+        </div>
+        <div class="mdui-card-content">
+            <div class="mdui-textfield mdui-textfield-floating-label mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">&#xe853;</i>
+                <label for="author" class="mdui-textfield-label">称呼</label>
+                <input name="author" id="author" class="mdui-textfield-input" type="text" autocomplete="new-password"
+                    value="" required="">
+                <div class="mdui-textfield-error">请填写称呼</div>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">&#xe0be;</i>
+                <label for="mail" class="mdui-textfield-label">E-mail</label>
+                <input name="email" id="email" class="mdui-textfield-input" type="email" autocomplete="new-password"
+                    value="" required="">
+                <div class="mdui-textfield-error">请填写合法的电子邮箱地址</div>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">&#xe157;</i>
+                <label for="url" class="mdui-textfield-label">网站</label>
+                <input name="url" id="url" class="mdui-textfield-input" type="url" autocomplete="new-password" value="">
+                <div class="mdui-textfield-error">请填写合法的网站地址</div>
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">&#xe0c9;</i>
+                <label for="text" class="mdui-textfield-label">内容</label>
+                <textarea name="text" id="text" class="mdui-textfield-input" type="text" required=""></textarea>
+                <div class="mdui-textfield-error">请填写内容</div>
+            </div>
+        </div>
+        <div class="mdui-card-actions">
+            <button class="mdui-btn mdui-ripple mdui-text-color-theme-accent" type="submit">发表评论</button>
+        </div>
+    </form>
+</div>
+
+
 {% endblock body %}
