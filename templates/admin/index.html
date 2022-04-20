@@ -1,9 +1,6 @@
-{% extends "admin/layout_admin.html" %}
-{% block title %}
-Admin Panel
-{% endblock title %}
-{% block body %}
-<form action="/new" method="post">
+{% extends "admin/layout.html" %}
+{% block main %}
+<form action="/admin/new" method="post">
     <h2>New Article</h2>
     <input type="text" name="title" />
     <br />
@@ -11,10 +8,10 @@ Admin Panel
     <br />
     <button type="submit">submit</button>
 </form>
-<form action="/delete" method="post">
+<form action="/admin/delete" method="post">
     <h2>Delete Article</h2>
     <input type="text" name="aid" />
     <br />
     <button type="submit">submit</button>
 </form>
-{% endblock body %}
+{% endblock main %}

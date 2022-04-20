@@ -1,0 +1,115 @@
+{% extends "admin/layout.html" %}
+{% block main %}
+<div class="pagetitle">
+    <h1>
+        {% if is_posts %}
+        文章
+        {% elif is_comments %}
+        评论
+        {% endif %}
+    </h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/admin">Home</a></li>
+            <li class="breadcrumb-item active">
+                {% if is_posts %}
+                Posts
+                {% elif is_comments %}
+                Comments
+                {% endif %}
+            </li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {% if is_posts %}
+                        文章列表
+                        {% elif is_comments %}
+                        评论列表
+                        {% endif %}
+                    </h5>
+
+                    <!-- Table with stripped rows -->
+                    <table class="table datatable">
+                        <thead>
+                            {% if is_posts %}
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">title</th>
+                                <th scope="col">created</th>
+                                <th scope="col">published</th>
+                                <th scope="col"></th>
+                            </tr>
+                            {% elif is_comments %}
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">aid</th>
+                                <th scope="col">author</th>
+                                <th scope="col">text</th>
+                                <th scope="col"></th>
+                            </tr>
+                            {% endif %}
+
+
+                        </thead>
+                        <tbody>
+                            {% for content in contents %}
+                            {% if is_posts %}
+                            <tr>
+                                <th scope="row">{{ content.aid }}</th>
+                                <td>{{ content.title }}</td>
+                                <td>{{ timestamp2time(timestamp = content.created) }}</td>
+                                <td>{{ content.published }}</td>
+                                <td class="d-flex justify-content-end">
+                                    <form action="/admin/delete" method="post">
+                                        <div class="btn-group" role="group" aria-label="Basic example">
+                                            <input name="aid" value="{{ content.aid }}" hidden>
+                                            <a href="/admin/update?aid={{ content.aid }}"
+                                                class="btn btn-sm btn-primary">Edit</a>
+                                            <!-- <a href="#" class="btn btn-sm btn-danger">Delete</a> -->
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% elif is_comments %}
+                            <tr>
+                                <th scope="row">{{ content.cid }}</th>
+                                <td>{{ content.aid }}</td>
+                                <td>{{ content.author }}</td>
+                                <td>{{ content.text }}</td>
+                                <td class="d-flex justify-content-end">
+                                    <form action="/comment" method="post">
+                                        <div class="btn-group" role="group" aria-label="Basic example">
+                                            <input name="cid" value="{{ content.cid }}" hidden>
+                                            <input name="method" value="delete" hidden>
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- End Table with stripped rows -->
+                    {% if not is_comments %}
+                    <div class="d-flex justify-content-end">
+                        <a href="/admin/new" class="btn btn-primary">新建</a>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}

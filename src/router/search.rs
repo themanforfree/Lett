@@ -11,7 +11,7 @@ struct Params {
     keyword: String,
 }
 
-pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     let query = req.uri().query()?;
     let params: Params = serde_urlencoded::from_str(query).ok()?;
     let mut articles =

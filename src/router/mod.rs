@@ -40,14 +40,14 @@ enum RouterType {
     Comment,
 }
 
-pub(crate) fn md2html(md: &str) -> String {
+pub fn md2html(md: &str) -> String {
     let parser = Parser::new_ext(md, Options::all());
     let mut output = String::new();
     html::push_html(&mut output, parser);
     output
 }
 
-pub(crate) fn init(cfg: &Config) -> Result<()> {
+pub fn init(cfg: &Config) -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
@@ -57,11 +57,11 @@ pub(crate) fn init(cfg: &Config) -> Result<()> {
 
     router.insert("/search", RouterType::Search)?;
     router.insert("/admin", RouterType::Admin)?;
-    router.insert("/admin/", RouterType::Admin)?;
+    router.insert("/admin/:path", RouterType::Admin)?;
 
-    router.insert("/new", RouterType::New)?;
-    router.insert("/delete", RouterType::Delete)?;
-    router.insert("/update", RouterType::Update)?;
+    router.insert("/admin/new", RouterType::New)?;
+    router.insert("/admin/delete", RouterType::Delete)?;
+    router.insert("/admin/update", RouterType::Update)?;
     router.insert("/login", RouterType::Login)?;
     router.insert("/login/", RouterType::Login)?;
     router.insert("/comment", RouterType::Comment)?;
@@ -107,13 +107,16 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
     let path = req.uri().path();
     if let Ok(matched) = router.at(path) {
         match (req.method(), matched.value) {
-            (&Method::POST, RouterType::New) => new::handle(req).await,
             (&Method::POST, RouterType::Delete) => delete::handle(req).await,
-            (&Method::POST, RouterType::Update) => update::handle(req).await,
             (&Method::POST, RouterType::Comment) => comment::handle(req).await,
             (&Method::GET, RouterType::Search) => search::handle(req).await,
-            (&Method::GET, RouterType::Admin) => admin::handle(req).await,
+            (&Method::GET, RouterType::Admin) => {
+                let path = matched.params.get("path").unwrap_or("").to_owned();
+                admin::handle(req, &path).await
+            }
             (&Method::GET, RouterType::Index) => index::handle(req).await,
+            (_, RouterType::Update) => update::handle(req).await,
+            (_, RouterType::New) => new::handle(req).await,
             (_, RouterType::Login) => login::handle(req).await,
             (&Method::GET, RouterType::Archive) => {
                 let year = matched.params.get("year")?.to_owned();
@@ -131,7 +134,7 @@ async fn merge(req: Request<Body>) -> Option<Response<Body>> {
     }
 }
 
-pub(crate) async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+pub async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let path = req.uri().path().to_owned();
     match merge(req).await {
         Some(res) => Ok(res),

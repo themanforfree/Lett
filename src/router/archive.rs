@@ -5,7 +5,7 @@ use crate::{
 use hyper::{Body, Request, Response};
 use tera::Context;
 
-pub(crate) async fn handle(_req: Request<Body>, year: &str, month: &str) -> Option<Response<Body>> {
+pub async fn handle(_req: Request<Body>, year: &str, month: &str) -> Option<Response<Body>> {
     if year.len() != 4 || month.len() != 2 {
         return None;
     }

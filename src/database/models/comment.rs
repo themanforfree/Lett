@@ -40,6 +40,14 @@ fn default_created() -> i64 {
     OffsetDateTime::now_utc().unix_timestamp()
 }
 
+pub fn read_all(conn: &MysqlConnection) -> Result<Vec<Comment>> {
+    use crate::database::schema::comments::dsl::*;
+    comments
+        .order(aid.desc())
+        .load::<Comment>(conn)
+        .map_err(Into::into)
+}
+
 pub fn read_by_aid(conn: &MysqlConnection, id: u32) -> Result<Vec<Comment>> {
     use crate::database::schema::comments::dsl::*;
     comments
@@ -56,9 +64,9 @@ pub fn create(conn: &MysqlConnection, comment: &NewComment) -> Result<usize> {
         .map_err(Into::into)
 }
 
-// pub fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
-//     use crate::database::schema::comments::dsl::*;
-//     diesel::delete(comments.find(id))
-//         .execute(conn)
-//         .map_err(Into::into)
-// }
+pub fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
+    use crate::database::schema::comments::dsl::*;
+    diesel::delete(comments.find(id))
+        .execute(conn)
+        .map_err(Into::into)
+}

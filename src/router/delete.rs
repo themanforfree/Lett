@@ -10,7 +10,7 @@ struct Params {
     aid: u32,
 }
 
-pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     log::debug!("Post to delete");
     let conn = establish_connection();
     let tmp = session::get_from_request(&conn, &req);

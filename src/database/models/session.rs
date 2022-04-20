@@ -8,14 +8,14 @@ use time::{format_description::well_known::Rfc2822, OffsetDateTime};
 
 #[derive(Queryable, Insertable, Deserialize, AsChangeset, Debug)]
 #[table_name = "sessions"]
-pub(crate) struct Session {
+pub struct Session {
     sid: String,
     data: Option<String>,
     expiration: i64,
 }
 
 impl Session {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             sid: nanoid!(16),
             data: None,
@@ -23,7 +23,7 @@ impl Session {
         }
     }
 
-    pub(crate) fn to_cookie(&self) -> Result<String> {
+    pub fn to_cookie(&self) -> Result<String> {
         Ok(format!(
             "SESSIONID={}; Expires={};  path=/",
             self.sid,
@@ -31,7 +31,7 @@ impl Session {
         ))
     }
 
-    pub(crate) fn check_expiration(&self) -> bool {
+    pub fn check_expiration(&self) -> bool {
         OffsetDateTime::now_utc().unix_timestamp() < self.expiration
     }
 }
@@ -47,7 +47,7 @@ fn get(conn: &MysqlConnection, id: &str) -> Result<Session> {
     sessions.find(id).first::<Session>(conn).map_err(Into::into)
 }
 
-pub(crate) fn insert(conn: &MysqlConnection, session: &Session) -> Result<usize> {
+pub fn insert(conn: &MysqlConnection, session: &Session) -> Result<usize> {
     use crate::database::schema::sessions::dsl::*;
     diesel::insert_into(sessions)
         .values(session)
@@ -55,7 +55,7 @@ pub(crate) fn insert(conn: &MysqlConnection, session: &Session) -> Result<usize>
         .map_err(Into::into)
 }
 
-pub(crate) fn get_from_request(conn: &MysqlConnection, req: &Request<Body>) -> Option<Session> {
+pub fn get_from_request(conn: &MysqlConnection, req: &Request<Body>) -> Option<Session> {
     let cookie = req.headers().get("Cookie")?.to_str().ok()?;
     let id = cookie.split(';').find_map(|s| {
         if s.trim().starts_with("SESSIONID=") {

@@ -8,7 +8,7 @@ use crate::{
 use hyper::{Body, Request, Response};
 use tera::Context;
 
-pub(crate) async fn handle(_req: Request<Body>, id: &str) -> Option<Response<Body>> {
+pub async fn handle(_req: Request<Body>, id: &str) -> Option<Response<Body>> {
     let id = id.parse().ok()?;
     log::debug!("Request post: aid = {}", id);
     let mut atc = article::read_by_id(&establish_connection(), id).ok()?;

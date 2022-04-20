@@ -8,13 +8,14 @@ use time::{macros::format_description, OffsetDateTime};
 #[derive(Queryable, QueryableByName, Debug, Serialize, AsChangeset, Deserialize)]
 #[table_name = "articles"]
 
-pub(crate) struct Article {
-    pub(crate) aid: u32,
-    pub(crate) title: String,
-    pub(crate) content: String,
-    pub(crate) created: i64,
-    pub(crate) published: bool,
-    pub(crate) comments_num: i32,
+pub struct Article {
+    pub aid: u32,
+    pub title: String,
+    pub content: String,
+    pub created: i64,
+    #[serde(default)]
+    pub published: bool,
+    pub comments_num: i32,
 }
 
 impl From<Bytes> for Article {
@@ -25,11 +26,13 @@ impl From<Bytes> for Article {
 
 #[derive(Insertable, AsChangeset, Deserialize, Debug)]
 #[table_name = "articles"]
-pub(crate) struct NewArticle {
-    title: String,
-    content: String,
+pub struct NewArticle {
+    pub title: String,
+    pub content: String,
     #[serde(default = "default_created")]
-    created: i64,
+    pub created: i64,
+    #[serde(default)]
+    pub published: bool,
 }
 
 fn default_created() -> i64 {
@@ -42,15 +45,24 @@ impl From<Bytes> for NewArticle {
     }
 }
 
-pub(crate) fn read_by_id(conn: &MysqlConnection, id: u32) -> Result<Article> {
+pub fn read_by_id(conn: &MysqlConnection, id: u32) -> Result<Article> {
     use crate::database::schema::articles::dsl::*;
     articles.find(id).first::<Article>(conn).map_err(Into::into)
 }
 
-pub(crate) fn read_all(conn: &MysqlConnection) -> Result<Vec<Article>> {
+pub fn read_published(conn: &MysqlConnection) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     articles
-        .order(aid.desc())
+        .filter(published.eq(true))
+        .order(created.desc())
+        .load::<Article>(conn)
+        .map_err(Into::into)
+}
+
+pub fn read_all(conn: &MysqlConnection) -> Result<Vec<Article>> {
+    use crate::database::schema::articles::dsl::*;
+    articles
+        .order(created.desc())
         .load::<Article>(conn)
         .map_err(Into::into)
 }
@@ -96,11 +108,7 @@ fn get_start_and_end_of_month(year: i32, month: u8) -> Result<(i64, i64)> {
     Ok((start_timestamp, end_timestamp))
 }
 
-pub(crate) fn read_by_archive(
-    conn: &MysqlConnection,
-    year: i32,
-    month: u8,
-) -> Result<Vec<Article>> {
+pub fn read_by_archive(conn: &MysqlConnection, year: i32, month: u8) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     let (start, end) = get_start_and_end_of_month(year, month)?;
     articles
@@ -110,7 +118,7 @@ pub(crate) fn read_by_archive(
         .map_err(Into::into)
 }
 
-pub(crate) fn search(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Article>> {
+pub fn search(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Article>> {
     use crate::database::schema::articles::dsl::*;
     articles
         .filter(content.like(format!("%{}%", keyword)))
@@ -119,7 +127,7 @@ pub(crate) fn search(conn: &MysqlConnection, keyword: &str) -> Result<Vec<Articl
         .map_err(Into::into)
 }
 
-pub(crate) fn create(conn: &MysqlConnection, article: &NewArticle) -> Result<usize> {
+pub fn create(conn: &MysqlConnection, article: &NewArticle) -> Result<usize> {
     use crate::database::schema::articles::dsl::*;
     diesel::insert_into(articles)
         .values(article)
@@ -127,14 +135,14 @@ pub(crate) fn create(conn: &MysqlConnection, article: &NewArticle) -> Result<usi
         .map_err(Into::into)
 }
 
-pub(crate) fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
+pub fn delete(conn: &MysqlConnection, id: u32) -> Result<usize> {
     use crate::database::schema::articles::dsl::*;
     diesel::delete(articles.filter(aid.eq(id)))
         .execute(conn)
         .map_err(Into::into)
 }
 
-pub(crate) fn update(conn: &MysqlConnection, article: &Article) -> Result<usize> {
+pub fn update(conn: &MysqlConnection, article: &Article) -> Result<usize> {
     use crate::database::schema::articles::dsl::*;
     diesel::update(articles.find(article.aid))
         .set(article)

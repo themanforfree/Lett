@@ -17,7 +17,7 @@ fn check_login(username: &str, password: &str) -> bool {
     username == "admin" && password == "admin"
 }
 
-pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     match *req.method() {
         Method::GET => {
             log::debug!("Request login page");

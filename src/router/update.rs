@@ -1,26 +1,50 @@
-use crate::database::{
-    establish_connection,
-    models::{
-        article::{self, Article},
-        session,
+use crate::{
+    database::{
+        establish_connection,
+        models::{
+            article::{self, Article},
+            session,
+        },
     },
+    router::TEMPLATES,
 };
-use hyper::{header, Body, Request, Response, StatusCode};
+use hyper::{header, Body, Method, Request, Response, StatusCode};
+use serde::Deserialize;
+use tera::Context;
 
-pub(crate) async fn handle(req: Request<Body>) -> Option<Response<Body>> {
-    log::debug!("Post to Update");
+#[derive(Deserialize)]
+struct Params {
+    aid: u32,
+}
+
+// pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+
+pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     let conn = establish_connection();
     let tmp = session::get_from_request(&conn, &req);
     match tmp {
-        Some(s) if s.check_expiration() => {
-            let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
-            let article = Article::from(body);
-
-            match article::update(&conn, &article) {
-                Ok(_) => Some(Response::new(Body::from("Update article success"))),
-                Err(_) => Some(Response::new(Body::from("Update article failed"))),
+        Some(s) if s.check_expiration() => match *req.method() {
+            Method::POST => {
+                log::debug!("Post to Update");
+                let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
+                let article = Article::from(body);
+                match article::update(&conn, &article) {
+                    Ok(_) => Some(Response::new(Body::from("Update article success"))),
+                    Err(_) => Some(Response::new(Body::from("Update article failed"))),
+                }
             }
-        }
+            Method::GET => {
+                log::debug!("Request Update page");
+                let query = req.uri().query()?;
+                let params: Params = serde_urlencoded::from_str(query).ok()?;
+                let atc = article::read_by_id(&conn, params.aid).ok()?;
+                let mut ctx = Context::new();
+                ctx.insert("article", &atc);
+                let body = TEMPLATES.get()?.render("admin/update.html", &ctx).unwrap();
+                Some(Response::new(hyper::Body::from(body)))
+            }
+            _ => None,
+        },
         _ => {
             log::debug!("Post to update failed, Redirect to /login");
             let mut res = Response::new(Body::empty());
