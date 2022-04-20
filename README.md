@@ -12,41 +12,54 @@
 * [X] 静态文件路由
 * [X] 配置文件
 * [X] tls 支持
+* [X] 评论
 
 
 ## 使用
+
+安装依赖   
+
+```bash
+# Debian/Ubuntu
+apt install
+```
 
 创建数据库,在 `MySQL` 中执行sql语句
 ```SQL
 CREATE DATABASE database_name;
 ```
 
-安装依赖   
+配置文件模板
+```toml
+[application]
+# The socket address to bind
+listen = "0.0.0.0:3000"
+# TimeZone
+timezone = "+08:00"
+# enable/disable tls
+tls = true
+# certificate file path
+certs = "sample.pem"
+# key file path
+key = "sample.rsa"
 
-```bash
-# Debian/Ubuntu
-apt install * [ ] 配置文件
-```
+[database]
+# Database url
+url = "mysql://username:password@localhost/database_name"
 
-程序同级目录创建 .env 文件
-
-```
-DATABASE_URL=mysql://[username]:[password]@locakhost/database_name
-```
-或直接添加到环境变量
-
-```bash
-export DATABASE_URL=mysql://[username]:[password]@locakhost/database_name
+[site]
+# The site name
+name = "Example Name"
+# The site URL
+url = "http://example.com"
+# The site description
+description = "Example Description"
 ```
 
 运行
 ```bash
-lett
+lett -c config.toml
 ```
-
-## TODO
-
-* [ ] 评论
 
 ## License
 GNU General Public License v3.0
