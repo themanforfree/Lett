@@ -21,7 +21,7 @@
 
 ```bash
 # Debian/Ubuntu
-apt install
+apt install libmysqlclient-dev
 ```
 
 创建数据库,在 `MySQL` 中执行sql语句
