@@ -6,7 +6,7 @@ use crate::{
             session,
         },
     },
-    router::TEMPLATES,
+    router::ADMIN_TEMPLATES,
 };
 use hyper::{header, Body, Method, Request, Response, StatusCode};
 use matchit::Params;
@@ -34,10 +34,10 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
             }
             Method::GET => {
                 let ctx = Context::new();
-                let body = TEMPLATES
+                let body = ADMIN_TEMPLATES
                     .get()
                     .unwrap()
-                    .render("admin/new.html", &ctx)
+                    .render("new.html", &ctx)
                     .unwrap();
                 Some(Response::new(hyper::Body::from(body)))
             }

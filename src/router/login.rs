@@ -53,7 +53,7 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
                         );
                     }
                     Err(e) => {
-                        println!("{}", e)
+                        log::error!("Failed to generate cookie: {}", e);
                     }
                 }
                 Some(res)

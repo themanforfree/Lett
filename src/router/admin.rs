@@ -16,8 +16,7 @@ pub async fn handle(req: Request<Body>, params: Params<'_, '_>) -> Option<Respon
             let tera = ADMIN_TEMPLATES.get().unwrap();
             log::debug!("Request admin page success: {:?}", s);
             let body = match path {
-                "" | "index" => tera.render("index.html", &Context::new()).unwrap(),
-                "posts" => {
+                "" | "posts" => {
                     let mut ctx = Context::new();
                     let articles = article::read_all(&establish_connection()).unwrap();
                     ctx.insert("is_posts", &true);

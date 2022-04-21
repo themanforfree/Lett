@@ -42,6 +42,11 @@ impl Default for Session {
     }
 }
 
+pub fn read_all(conn: &MysqlConnection) -> Result<Vec<Session>> {
+    use crate::database::schema::sessions::dsl::*;
+    sessions.load::<Session>(conn).map_err(Into::into)
+}
+
 fn get(conn: &MysqlConnection, id: &str) -> Result<Session> {
     use crate::database::schema::sessions::dsl::*;
     sessions.find(id).first::<Session>(conn).map_err(Into::into)

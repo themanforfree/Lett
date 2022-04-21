@@ -32,6 +32,7 @@ async fn main() {
     }
 
     if let Err(e) = server::run().await {
-        eprintln!("server error: {}", e);
+        log::error!("Failed to run server: {}", e);
+        std::process::exit(1);
     }
 }

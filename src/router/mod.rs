@@ -4,9 +4,9 @@ use hyper_staticfile::Static;
 use matchit::Router;
 use once_cell::sync::OnceCell;
 use pulldown_cmark::{html, Options, Parser};
-use std::{collections::HashMap, convert::Infallible, path::Path};
+use std::{collections::HashMap, convert::Infallible};
 use tera::{to_value, Context, Tera, Value};
-use time::{macros::format_description, OffsetDateTime, UtcOffset};
+use time::{format_description as fd, macros::format_description, OffsetDateTime, UtcOffset};
 
 use crate::config::CONFIG;
 
@@ -47,6 +47,7 @@ pub fn md2html(md: &str) -> String {
 }
 
 pub fn init() -> Result<()> {
+    let cfg = CONFIG.get().unwrap();
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
@@ -68,22 +69,16 @@ pub fn init() -> Result<()> {
         .set(router)
         .map_err(|_| anyhow!("Failed to initialize router"))?;
 
-    let mut tera = Tera::new("templates/**/*.html").expect("Failed to compile templates");
-    tera.register_function("url_for", |args: &HashMap<String, Value>| {
-        if let Some(id) = args.get("id") {
-            Ok(to_value(format!("/post/{}", &id)).unwrap())
-        } else {
-            Err("Some Err".into())
-        }
-    });
+    let files = cfg.application.template_path.clone() + "/**/*.html";
+
+    let mut tera = Tera::new(&files).expect("Failed to compile templates");
 
     let fmt_tz = format_description!("[offset_hour]:[offset_minute]");
-    let cfg = CONFIG.get().unwrap();
     let offset = UtcOffset::parse(&cfg.application.timezone, fmt_tz).unwrap();
     let timestamp2time = move |args: &HashMap<String, Value>| {
         if let Some(timestamp) = args.get("timestamp") {
             let timestamp = timestamp.as_i64().unwrap();
-            let fmt_datetime = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
+            let fmt_datetime = fd::parse(&cfg.application.time_format).unwrap();
             let time = OffsetDateTime::from_unix_timestamp(timestamp)
                 .unwrap()
                 .to_offset(offset)
@@ -103,10 +98,9 @@ pub fn init() -> Result<()> {
         .set({
             let mut admin_tera = Tera::default();
             admin_tera.add_raw_templates(vec![
-                ("index.html", include_str!("admin_template/index.html")),
                 ("layout.html", include_str!("admin_template/layout.html")),
                 ("list.html", include_str!("admin_template/list.html")),
-                ("admin/new.html", include_str!("admin_template/new.html")),
+                ("new.html", include_str!("admin_template/new.html")),
                 ("update.html", include_str!("admin_template/update.html")),
                 ("login.html", include_str!("admin_template/login.html")),
             ])?;
@@ -115,7 +109,9 @@ pub fn init() -> Result<()> {
         })
         .map_err(|_| anyhow!("Failed to initialize tera"))?;
     STATIC_FILES
-        .set(Static::new(Path::new("files")))
+        .set(Static::new(
+            cfg.application.template_path.clone() + "/static",
+        ))
         .map_err(|_| anyhow!("Failed to initialize static files"))?;
     Ok(())
 }

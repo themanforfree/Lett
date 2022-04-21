@@ -1,0 +1,40 @@
+[application]
+
+# The socket address to bind
+listen = "0.0.0.0:3000"
+
+# TimeZone
+timezone = "+08:00"
+
+# Time format
+time_format = "[year]-[month]-[day] [hour]:[minute]:[second]"
+
+# Template path
+template_path = "templates"
+
+# enable/disable tls
+tls = false
+
+# certificate file path
+certs = "sample.pem"
+
+# key file path
+key = "sample.rsa"
+
+
+[database]
+
+# Database url
+url = "mysql://username:password@localhost/database_name"
+
+
+[site]
+
+# The site name
+name = "Example Name"
+
+# The site URL
+url = "http://example.com"
+
+# The site description
+description = "Example Description"

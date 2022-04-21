@@ -1,78 +1,38 @@
 {% extends "layout.html" %}
 {% block main %}
-<div class="pagetitle">
-    <h1>
-        编辑
-    </h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/admin">Home</a></li>
-            <li class="breadcrumb-item active">
-                Edit
-            </li>
-        </ol>
-    </nav>
-</div>
 
-<section class="section">
-    <div class="row">
-        <div class="col-lg-12">
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">编辑</h5>
-
-                    <!-- Floating Labels Form -->
-                    <form class="row g-3" method="post" action="/admin/update">
+<h1>编辑</h1>
 
 
-                        <input name="aid" value="{{ article.aid }}" hidden>
-                        <input name="created" value="{{ article.created }}" hidden>
-                        <input name="comments_num" value="{{ article.comments_num }}" hidden>
 
-                        <div class="col-md-12">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" name="title" id="floatingName"
-                                    value="{{ article.title }}" placeholder="Title">
-                                <label for="floatingName">标题</label>
-                            </div>
-                        </div>
+<form method="post" action="/admin/update">
 
 
-                        <div class="col-12">
-                            <div class="form-floating">
-                                <textarea class="form-control" name="content" id="floatingTextarea"
-                                    style="height: 300px;">{{ article.content }}</textarea>
-                                <label for="floatingTextarea">内容</label>
-                            </div>
-                        </div>
+    <input name="aid" value="{{ article.aid }}" hidden>
+    <input name="created" value="{{ article.created }}" hidden>
+    <input name="comments_num" value="{{ article.comments_num }}" hidden>
 
-                        <!-- <input name="published" value="{{ article.published }}" hidden> -->
-                        <!-- checkbox -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <div class="custom-control custom-checkbox">
-                                    {% if article.published %}
-                                    <input type="checkbox" class="custom-control-input" id="published" name="published"
-                                        value="true" checked>
-                                    {% else %}
-                                    <input type="checkbox" class="custom-control-input" id="published" name="published"
-                                        value="true">
-                                    {% endif %}
-                                    <label class="custom-control-label" for="customCheck1">发布</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                            <button type="reset" class="btn btn-secondary">Reset</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-
-        </div>
+    <div>
+        <input type="text" name="title" id="floatingName" value="{{ article.title }}" placeholder="Title">
+        <label for="floatingName">标题</label>
     </div>
-</section>
+    <div>
+        <textarea name="content" id="floatingTextarea" style="height: 300px;">{{ article.content }}</textarea>
+        <label for="floatingTextarea">内容</label>
+    </div>
+    <div>
+        {% if article.published %}
+        <input type="checkbox" id="published" name="published" value="true" checked>
+        {% else %}
+        <input type="checkbox" id="published" name="published" value="true">
+        {% endif %}
+        <label for="customCheck1">发布</label>
+    </div>
+    <div>
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+    </div>
+</form>
+
+
 {% endblock %}
