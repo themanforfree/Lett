@@ -1,16 +1,14 @@
 use anyhow::{anyhow, Result};
-use hyper::{Body, Method, Request, Response};
+use hyper::{Body, Request, Response};
+use hyper_staticfile::Static;
 use matchit::Router;
 use once_cell::sync::OnceCell;
 use pulldown_cmark::{html, Options, Parser};
-use std::{collections::HashMap, convert::Infallible};
+use std::{collections::HashMap, convert::Infallible, path::Path};
 use tera::{to_value, Context, Tera, Value};
 use time::{macros::format_description, OffsetDateTime, UtcOffset};
 
-use crate::{
-    config::{Config, Site},
-    TIMEZONE,
-};
+use crate::config::CONFIG;
 
 mod admin;
 mod archive;
@@ -21,12 +19,13 @@ mod login;
 mod new;
 mod post;
 mod search;
-mod static_files;
 mod update;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 static TEMPLATES: OnceCell<Tera> = OnceCell::new();
-static SITE: OnceCell<Site> = OnceCell::new();
+static ADMIN_TEMPLATES: OnceCell<Tera> = OnceCell::new();
+static STATIC_FILES: OnceCell<Static> = OnceCell::new();
+
 enum RouterType {
     Index,
     Archive,
@@ -47,13 +46,12 @@ pub fn md2html(md: &str) -> String {
     output
 }
 
-pub fn init(cfg: &Config) -> Result<()> {
+pub fn init() -> Result<()> {
     let mut router = Router::new();
     router.insert("/", RouterType::Index)?;
     router.insert("/:year/:month", RouterType::Archive)?;
     router.insert("/:year/:month/", RouterType::Archive)?;
     router.insert("/post/:id", RouterType::Post)?;
-    router.insert("/post/:id/", RouterType::Post)?;
 
     router.insert("/search", RouterType::Search)?;
     router.insert("/admin", RouterType::Admin)?;
@@ -80,9 +78,9 @@ pub fn init(cfg: &Config) -> Result<()> {
     });
 
     let fmt_tz = format_description!("[offset_hour]:[offset_minute]");
-    let timezone = TIMEZONE.get().unwrap();
-    let offset = UtcOffset::parse(timezone, fmt_tz).unwrap();
-    tera.register_function("timestamp2time", move |args: &HashMap<String, Value>| {
+    let cfg = CONFIG.get().unwrap();
+    let offset = UtcOffset::parse(&cfg.application.timezone, fmt_tz).unwrap();
+    let timestamp2time = move |args: &HashMap<String, Value>| {
         if let Some(timestamp) = args.get("timestamp") {
             let timestamp = timestamp.as_i64().unwrap();
             let fmt_datetime = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
@@ -96,41 +94,50 @@ pub fn init(cfg: &Config) -> Result<()> {
         } else {
             Err("Some Err".into())
         }
-    });
-    TEMPLATES.set(tera).unwrap();
-    SITE.set(cfg.site.clone()).unwrap();
+    };
+    tera.register_function("timestamp2time", timestamp2time);
+    TEMPLATES
+        .set(tera)
+        .map_err(|_| anyhow!("Failed to initialize tera"))?;
+    ADMIN_TEMPLATES
+        .set({
+            let mut admin_tera = Tera::default();
+            admin_tera.add_raw_templates(vec![
+                ("index.html", include_str!("admin_template/index.html")),
+                ("layout.html", include_str!("admin_template/layout.html")),
+                ("list.html", include_str!("admin_template/list.html")),
+                ("admin/new.html", include_str!("admin_template/new.html")),
+                ("update.html", include_str!("admin_template/update.html")),
+                ("login.html", include_str!("admin_template/login.html")),
+            ])?;
+            admin_tera.register_function("timestamp2time", timestamp2time);
+            admin_tera
+        })
+        .map_err(|_| anyhow!("Failed to initialize tera"))?;
+    STATIC_FILES
+        .set(Static::new(Path::new("files")))
+        .map_err(|_| anyhow!("Failed to initialize static files"))?;
     Ok(())
 }
 
 async fn merge(req: Request<Body>) -> Option<Response<Body>> {
     let router = ROUTE_TABLE.get().unwrap();
-    let path = req.uri().path();
-    if let Ok(matched) = router.at(path) {
-        match (req.method(), matched.value) {
-            (&Method::POST, RouterType::Delete) => delete::handle(req).await,
-            (&Method::POST, RouterType::Comment) => comment::handle(req).await,
-            (&Method::GET, RouterType::Search) => search::handle(req).await,
-            (&Method::GET, RouterType::Admin) => {
-                let path = matched.params.get("path").unwrap_or("").to_owned();
-                admin::handle(req, &path).await
-            }
-            (&Method::GET, RouterType::Index) => index::handle(req).await,
-            (_, RouterType::Update) => update::handle(req).await,
-            (_, RouterType::New) => new::handle(req).await,
-            (_, RouterType::Login) => login::handle(req).await,
-            (&Method::GET, RouterType::Archive) => {
-                let year = matched.params.get("year")?.to_owned();
-                let month = matched.params.get("month")?.to_owned();
-                archive::handle(req, &year, &month).await
-            }
-            (&Method::GET, RouterType::Post) => {
-                let id = matched.params.get("id")?.to_owned();
-                post::handle(req, &id).await
-            }
-            _ => None,
+    let path = req.uri().path().to_string();
+    if let Ok(matched) = router.at(&path) {
+        match matched.value {
+            RouterType::Delete => delete::handle(req, matched.params).await,
+            RouterType::Comment => comment::handle(req, matched.params).await,
+            RouterType::Search => search::handle(req, matched.params).await,
+            RouterType::Admin => admin::handle(req, matched.params).await,
+            RouterType::Index => index::handle(req, matched.params).await,
+            RouterType::Update => update::handle(req, matched.params).await,
+            RouterType::New => new::handle(req, matched.params).await,
+            RouterType::Login => login::handle(req, matched.params).await,
+            RouterType::Archive => archive::handle(req, matched.params).await,
+            RouterType::Post => post::handle(req, matched.params).await,
         }
     } else {
-        static_files::handle(req).await
+        STATIC_FILES.get().unwrap().clone().serve(req).await.ok()
     }
 }
 
@@ -141,7 +148,8 @@ pub async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         None => {
             log::debug!("Not Found: {}", path);
             let mut context = Context::new();
-            context.insert("site", &SITE.get().unwrap());
+            let cfg = CONFIG.get().unwrap();
+            context.insert("site", &cfg.site);
             let body = TEMPLATES
                 .get()
                 .unwrap()

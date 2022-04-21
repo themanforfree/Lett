@@ -9,6 +9,7 @@ edition = "2021"
 diesel = { version = "1.4", features = ["mysql", "r2d2"] }
 diesel_migrations = "1.4"
 hyper = { version = "0.14", features = ["server", "http1", "http2", "tcp"] }
+hyper-staticfile = "0.8.0"
 matchit = "0.5"
 tera = { version = "1.15", default-features = false }
 tokio = { version = "1.17", features = ["fs", "macros", "rt-multi-thread"] }

@@ -1,4 +1,4 @@
-use crate::{config::Config, router};
+use crate::{config::CONFIG, router};
 use anyhow::Result;
 use core::task::{Context, Poll};
 use futures_util::ready;
@@ -24,7 +24,8 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use std::{future::Future, vec::Vec};
 
-pub async fn run(cfg: &Config) -> Result<()> {
+pub async fn run() -> Result<()> {
+    let cfg = CONFIG.get().unwrap();
     let addr = cfg.application.listen;
     if !cfg.application.tls {
         let service =

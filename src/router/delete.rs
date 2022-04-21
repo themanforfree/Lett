@@ -3,21 +3,24 @@ use crate::database::{
     models::{article, session},
 };
 use hyper::{header, Body, Request, Response, StatusCode};
+use matchit::Params;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct Params {
+struct DeleteParams {
     aid: u32,
 }
 
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     log::debug!("Post to delete");
     let conn = establish_connection();
     let tmp = session::get_from_request(&conn, &req);
     match tmp {
         Some(s) if s.check_expiration() => {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
-            let aid = serde_urlencoded::from_bytes::<Params>(&body).ok()?.aid;
+            let aid = serde_urlencoded::from_bytes::<DeleteParams>(&body)
+                .ok()?
+                .aid;
             match article::delete(&conn, aid) {
                 Ok(n) if n == 0 => {
                     log::debug!("Delete article failed, aid = {}", aid);

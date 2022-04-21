@@ -3,33 +3,33 @@ use crate::{
         establish_connection,
         models::{article, comment, session},
     },
-    router::TEMPLATES,
+    router::ADMIN_TEMPLATES,
 };
 use hyper::{header, Body, Request, Response, StatusCode};
+use matchit::Params;
 use tera::Context;
 
-pub async fn handle(req: Request<Body>, path: &str) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, params: Params<'_, '_>) -> Option<Response<Body>> {
+    let path = params.get("path").unwrap_or("");
     match session::get_from_request(&establish_connection(), &req) {
         Some(s) if s.check_expiration() => {
-            let tera = TEMPLATES.get().unwrap();
+            let tera = ADMIN_TEMPLATES.get().unwrap();
             log::debug!("Request admin page success: {:?}", s);
             let body = match path {
-                "" | "index.html" | "index" => {
-                    tera.render("admin/index.html", &Context::new()).unwrap()
-                }
-                "posts" | "posts.html" => {
+                "" | "index" => tera.render("index.html", &Context::new()).unwrap(),
+                "posts" => {
                     let mut ctx = Context::new();
                     let articles = article::read_all(&establish_connection()).unwrap();
                     ctx.insert("is_posts", &true);
                     ctx.insert("contents", &articles);
-                    tera.render("admin/list.html", &ctx).unwrap()
+                    tera.render("list.html", &ctx).unwrap()
                 }
-                "comments" | "comments.html" => {
+                "comments" => {
                     let mut ctx = Context::new();
                     let comments = comment::read_all(&establish_connection()).unwrap();
                     ctx.insert("is_comments", &true);
                     ctx.insert("contents", &comments);
-                    tera.render("admin/list.html", &ctx).unwrap()
+                    tera.render("list.html", &ctx).unwrap()
                 }
 
                 _ => return None,

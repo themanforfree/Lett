@@ -1,11 +1,15 @@
 use crate::{
+    config::CONFIG,
     database::{establish_connection, models::article},
-    router::{md2html, SITE, TEMPLATES},
+    router::{md2html, TEMPLATES},
 };
 use hyper::{Body, Request, Response};
+use matchit::Params;
 use tera::Context;
 
-pub async fn handle(_req: Request<Body>, year: &str, month: &str) -> Option<Response<Body>> {
+pub async fn handle(_req: Request<Body>, params: Params<'_, '_>) -> Option<Response<Body>> {
+    let year = params.get("year")?;
+    let month = params.get("month")?;
     if year.len() != 4 || month.len() != 2 {
         return None;
     }
@@ -20,9 +24,9 @@ pub async fn handle(_req: Request<Body>, year: &str, month: &str) -> Option<Resp
         atc.content = md2html(&atc.content);
     }
 
-    let site = SITE.get().unwrap();
+    let cfg = CONFIG.get().unwrap();
     let mut content = Context::new();
-    content.insert("site", &site);
+    content.insert("site", &cfg.site);
     content.insert("title", &format!("Archive: {}-{}", year, month));
     content.insert("articles", &articles);
 

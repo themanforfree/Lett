@@ -1,10 +1,11 @@
 use anyhow::Result;
 use diesel::{Connection, MysqlConnection};
 use getopts::Options;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::{env::ArgsOs, fs, net::SocketAddr};
 
-use crate::TIMEZONE;
+pub static CONFIG: OnceCell<Config> = OnceCell::new();
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -37,7 +38,7 @@ pub struct Site {
 embed_migrations!();
 
 impl Config {
-    pub fn parse(args: ArgsOs) -> Result<Config> {
+    pub fn parse(args: ArgsOs) -> Result<()> {
         let mut opts = Options::new();
         opts.optopt("c", "config", "read config from file", "CONFIG_PATH");
         opts.optflag("", "install", "create database");
@@ -57,7 +58,7 @@ impl Config {
             std::process::exit(1);
         }
 
-        TIMEZONE.set(config.application.timezone.clone()).unwrap();
-        Ok(config)
+        CONFIG.set(config).unwrap();
+        Ok(())
     }
 }

@@ -3,18 +3,19 @@ use crate::database::{
     models::comment::{self, NewComment},
 };
 use hyper::{Body, Request, Response};
+use matchit::Params;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct Params {
+struct CommentParams {
     method: String,
     #[serde(default)]
     cid: u32,
 }
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     log::debug!("Post to Comment");
     let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
-    let params: Params = serde_urlencoded::from_bytes(&body).unwrap();
+    let params: CommentParams = serde_urlencoded::from_bytes(&body).unwrap();
     match params.method.as_str() {
         "new" => {
             let article = NewComment::from(body);

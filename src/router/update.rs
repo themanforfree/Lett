@@ -6,20 +6,21 @@ use crate::{
             session,
         },
     },
-    router::TEMPLATES,
+    router::ADMIN_TEMPLATES,
 };
 use hyper::{header, Body, Method, Request, Response, StatusCode};
+use matchit::Params;
 use serde::Deserialize;
 use tera::Context;
 
 #[derive(Deserialize)]
-struct Params {
+struct UpdateParams {
     aid: u32,
 }
 
 // pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
 
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     let conn = establish_connection();
     let tmp = session::get_from_request(&conn, &req);
     match tmp {
@@ -36,11 +37,11 @@ pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
             Method::GET => {
                 log::debug!("Request Update page");
                 let query = req.uri().query()?;
-                let params: Params = serde_urlencoded::from_str(query).ok()?;
+                let params: UpdateParams = serde_urlencoded::from_str(query).ok()?;
                 let atc = article::read_by_id(&conn, params.aid).ok()?;
                 let mut ctx = Context::new();
                 ctx.insert("article", &atc);
-                let body = TEMPLATES.get()?.render("admin/update.html", &ctx).unwrap();
+                let body = ADMIN_TEMPLATES.get()?.render("update.html", &ctx).unwrap();
                 Some(Response::new(hyper::Body::from(body)))
             }
             _ => None,

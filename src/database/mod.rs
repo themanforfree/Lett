@@ -6,7 +6,7 @@ use diesel::{
 
 use once_cell::sync::OnceCell;
 
-use crate::config::Config;
+use crate::config::CONFIG;
 
 pub mod models;
 mod schema;
@@ -14,7 +14,8 @@ mod schema;
 type MysqlPool = Pool<ConnectionManager<MysqlConnection>>;
 static CONNECTION_POOL: OnceCell<MysqlPool> = OnceCell::new();
 
-pub fn init(cfg: &Config) -> Result<()> {
+pub fn init() -> Result<()> {
+    let cfg = CONFIG.get().unwrap();
     let manager = ConnectionManager::<MysqlConnection>::new(&cfg.database.url);
     let pool: MysqlPool = Pool::builder().test_on_check_out(true).build(manager)?;
 

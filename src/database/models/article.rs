@@ -1,4 +1,4 @@
-use crate::{database::schema::articles, TIMEZONE};
+use crate::{config::CONFIG, database::schema::articles};
 use anyhow::Result;
 use diesel::prelude::*;
 use hyper::body::Bytes;
@@ -83,13 +83,16 @@ fn get_start_and_end_of_month(year: i32, month: u8) -> Result<(i64, i64)> {
         }
     };
 
-    let timezone = TIMEZONE.get().unwrap();
+    let cfg = CONFIG.get().unwrap();
     let fmt = format_description!(
         "[year]-[month]-[day] [hour]:[minute]:[second] [offset_hour]:[offset_minute]"
     );
 
     let start_timestamp = OffsetDateTime::parse(
-        &format!("{}-{:02}-01 00:00:00 {}", year, month, timezone),
+        &format!(
+            "{}-{:02}-01 00:00:00 {}",
+            year, month, cfg.application.timezone
+        ),
         fmt,
     )?
     .unix_timestamp();
@@ -100,7 +103,7 @@ fn get_start_and_end_of_month(year: i32, month: u8) -> Result<(i64, i64)> {
             year,
             month,
             days(year, month),
-            timezone
+            cfg.application.timezone
         ),
         fmt,
     )?

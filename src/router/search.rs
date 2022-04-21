@@ -1,19 +1,21 @@
 use crate::{
+    config::CONFIG,
     database::{establish_connection, models::article},
-    router::{md2html, SITE, TEMPLATES},
+    router::{md2html, TEMPLATES},
 };
 use hyper::{Body, Request, Response};
+use matchit::Params;
 use serde::Deserialize;
 use tera::Context;
 
 #[derive(Deserialize)]
-struct Params {
+struct SearchParams {
     keyword: String,
 }
 
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     let query = req.uri().query()?;
-    let params: Params = serde_urlencoded::from_str(query).ok()?;
+    let params: SearchParams = serde_urlencoded::from_str(query).ok()?;
     let mut articles =
         article::search(&establish_connection(), &params.keyword).unwrap_or_default();
     for atc in articles.iter_mut() {
@@ -22,8 +24,8 @@ pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
     log::debug!("Request search page: keyword = {}", params.keyword);
     let mut content = Context::new();
 
-    let site = SITE.get().unwrap();
-    content.insert("site", &site);
+    let cfg = CONFIG.get().unwrap();
+    content.insert("site", &cfg.site);
     content.insert("title", "Search");
     content.insert("articles", &articles);
 

@@ -9,9 +9,10 @@ use crate::{
     router::TEMPLATES,
 };
 use hyper::{header, Body, Method, Request, Response, StatusCode};
+use matchit::Params;
 use tera::Context;
 
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     log::debug!("Post to new");
     let conn = establish_connection();
     let tmp = session::get_from_request(&conn, &req);

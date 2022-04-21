@@ -2,13 +2,14 @@ use crate::database::{
     establish_connection,
     models::session::{self, Session},
 };
-use crate::router::TEMPLATES;
+use crate::router::ADMIN_TEMPLATES;
 use hyper::{header, Body, Method, Request, Response, StatusCode};
+use matchit::Params;
 use serde::Deserialize;
 use tera::Context;
 
 #[derive(Deserialize)]
-struct Params<'a> {
+struct LoginParams<'a> {
     username: &'a str,
     password: &'a str,
 }
@@ -17,20 +18,20 @@ fn check_login(username: &str, password: &str) -> bool {
     username == "admin" && password == "admin"
 }
 
-pub async fn handle(req: Request<Body>) -> Option<Response<Body>> {
+pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Response<Body>> {
     match *req.method() {
         Method::GET => {
             log::debug!("Request login page");
-            let body = TEMPLATES
+            let body = ADMIN_TEMPLATES
                 .get()
                 .unwrap()
-                .render("admin/login.html", &Context::new())
+                .render("login.html", &Context::new())
                 .unwrap();
             Some(Response::new(hyper::Body::from(body)))
         }
         Method::POST => {
             let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
-            let params = serde_urlencoded::from_bytes::<Params>(&body).ok()?;
+            let params = serde_urlencoded::from_bytes::<LoginParams>(&body).ok()?;
             log::debug!("Post to login: username = {}", params.username);
             if check_login(params.username, params.password) {
                 let session = Session::new();
