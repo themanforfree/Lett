@@ -1,10 +1,10 @@
 # lett
 
-一个用 RUST 实现的简易博客系统
+一个用 Rust 实现的简易博客系统
 
 ## 特性
 
-* [X] rust 实现，性能优秀
+* [X] Rust 实现，性能优秀
 * [X] 支持 markdown 渲染
 * [X] 支持 jinja2 模板
 * [X] 支持 tls 
