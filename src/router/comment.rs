@@ -24,7 +24,7 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
                     "Crate {} comment success",
                     u
                 )))),
-                Err(_) => Some(Response::new(Body::from(format!("Crate comment failed")))),
+                Err(_) => Some(Response::new(Body::from("Crate comment failed"))),
             }
         }
         "delete" => match comment::delete(&establish_connection(), params.cid) {

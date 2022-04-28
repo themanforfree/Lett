@@ -62,11 +62,11 @@ impl Config {
 
         if let Some(database_url) = matches.opt_str("install") {
             let conn = MysqlConnection::establish(&database_url)?;
-            if let Ok(_) = article::read_all(&conn) {
+            if article::read_all(&conn).is_ok() {
                 log::error!("table 'article' already exists");
-            } else if let Ok(_) = comment::read_all(&conn) {
+            } else if comment::read_all(&conn).is_ok() {
                 log::error!("table 'comment' already exists");
-            } else if let Ok(_) = session::read_all(&conn) {
+            } else if session::read_all(&conn).is_ok() {
                 log::error!("table 'session' already exists");
             } else {
                 embedded_migrations::run(&conn)?;

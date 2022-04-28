@@ -22,14 +22,14 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
                 let body = hyper::body::to_bytes(req.into_body()).await.ok()?;
                 let article = NewArticle::from(body);
                 if article.title.is_empty() || article.content.is_empty() {
-                    return Some(Response::new(Body::from(format!("Crate article failed"))));
+                    return Some(Response::new(Body::from("Crate article failed")));
                 };
                 match article::create(&conn, &article) {
                     Ok(u) => Some(Response::new(Body::from(format!(
                         "Crate {} article success",
                         u
                     )))),
-                    Err(_) => Some(Response::new(Body::from(format!("Crate article failed")))),
+                    Err(_) => Some(Response::new(Body::from("Crate article failed"))),
                 }
             }
             Method::GET => {
