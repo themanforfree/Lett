@@ -23,7 +23,6 @@ mod update;
 
 static ROUTE_TABLE: OnceCell<Router<RouterType>> = OnceCell::new();
 static TEMPLATES: OnceCell<Tera> = OnceCell::new();
-static ADMIN_TEMPLATES: OnceCell<Tera> = OnceCell::new();
 static STATIC_FILES: OnceCell<Static> = OnceCell::new();
 
 enum RouterType {
@@ -93,20 +92,6 @@ pub fn init() -> Result<()> {
     tera.register_function("timestamp2time", timestamp2time);
     TEMPLATES
         .set(tera)
-        .map_err(|_| anyhow!("Failed to initialize tera"))?;
-    ADMIN_TEMPLATES
-        .set({
-            let mut admin_tera = Tera::default();
-            admin_tera.add_raw_templates(vec![
-                ("layout.html", include_str!("admin_template/layout.html")),
-                ("list.html", include_str!("admin_template/list.html")),
-                ("new.html", include_str!("admin_template/new.html")),
-                ("update.html", include_str!("admin_template/update.html")),
-                ("login.html", include_str!("admin_template/login.html")),
-            ])?;
-            admin_tera.register_function("timestamp2time", timestamp2time);
-            admin_tera
-        })
         .map_err(|_| anyhow!("Failed to initialize tera"))?;
     STATIC_FILES
         .set(Static::new(

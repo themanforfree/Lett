@@ -6,7 +6,7 @@ use crate::{
             session,
         },
     },
-    router::ADMIN_TEMPLATES,
+    router::TEMPLATES,
 };
 use hyper::{header, Body, Method, Request, Response, StatusCode};
 use matchit::Params;
@@ -41,7 +41,10 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
                 let atc = article::read_by_id(&conn, params.aid).ok()?;
                 let mut ctx = Context::new();
                 ctx.insert("article", &atc);
-                let body = ADMIN_TEMPLATES.get()?.render("update.html", &ctx).unwrap();
+                let body = TEMPLATES
+                    .get()?
+                    .render("admin_template/update.html", &ctx)
+                    .unwrap();
                 Some(Response::new(hyper::Body::from(body)))
             }
             _ => None,

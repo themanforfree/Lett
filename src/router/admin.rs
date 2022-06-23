@@ -3,7 +3,7 @@ use crate::{
         establish_connection,
         models::{article, comment, session},
     },
-    router::ADMIN_TEMPLATES,
+    router::TEMPLATES,
 };
 use hyper::{header, Body, Request, Response, StatusCode};
 use matchit::Params;
@@ -13,7 +13,7 @@ pub async fn handle(req: Request<Body>, params: Params<'_, '_>) -> Option<Respon
     let path = params.get("path").unwrap_or("");
     match session::get_from_request(&establish_connection(), &req) {
         Some(s) if s.check_expiration() => {
-            let tera = ADMIN_TEMPLATES.get().unwrap();
+            let tera = TEMPLATES.get().unwrap();
             log::debug!("Request admin page success: {:?}", s);
             let body = match path {
                 "" | "posts" => {
@@ -21,14 +21,14 @@ pub async fn handle(req: Request<Body>, params: Params<'_, '_>) -> Option<Respon
                     let articles = article::read_all(&establish_connection()).unwrap();
                     ctx.insert("is_posts", &true);
                     ctx.insert("contents", &articles);
-                    tera.render("list.html", &ctx).unwrap()
+                    tera.render("admin_template/list.html", &ctx).unwrap()
                 }
                 "comments" => {
                     let mut ctx = Context::new();
                     let comments = comment::read_all(&establish_connection()).unwrap();
                     ctx.insert("is_comments", &true);
                     ctx.insert("contents", &comments);
-                    tera.render("list.html", &ctx).unwrap()
+                    tera.render("admin_template/list.html", &ctx).unwrap()
                 }
 
                 _ => return None,

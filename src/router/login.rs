@@ -2,7 +2,7 @@ use crate::database::{
     establish_connection,
     models::session::{self, Session},
 };
-use crate::router::ADMIN_TEMPLATES;
+use crate::router::TEMPLATES;
 use hyper::{header, Body, Method, Request, Response, StatusCode};
 use matchit::Params;
 use serde::Deserialize;
@@ -22,10 +22,10 @@ pub async fn handle(req: Request<Body>, _params: Params<'_, '_>) -> Option<Respo
     match *req.method() {
         Method::GET => {
             log::debug!("Request login page");
-            let body = ADMIN_TEMPLATES
+            let body = TEMPLATES
                 .get()
                 .unwrap()
-                .render("login.html", &Context::new())
+                .render("admin_template/login.html", &Context::new())
                 .unwrap();
             Some(Response::new(hyper::Body::from(body)))
         }
