@@ -9,8 +9,8 @@ edition = "2021"
 diesel = { version = "1.4", features = ["mysql", "r2d2"] }
 diesel_migrations = "1.4"
 hyper = { version = "0.14", features = ["server", "http1", "http2", "tcp"] }
-hyper-staticfile = "0.8.0"
-matchit = "0.5"
+hyper-staticfile = "0.9"
+matchit = "0.6"
 tera = { version = "1.15", default-features = false }
 tokio = { version = "1.17", features = ["fs", "macros", "rt-multi-thread"] }
 env_logger = "0.9"
@@ -24,10 +24,10 @@ nanoid = "0.4"
 time = { version = "0.3", features = ["formatting", "macros", "parsing"] }
 pulldown-cmark = "0.9"
 getopts = "0.2"
-futures-util = "0.3.21"
-rustls-pemfile = "1.0.0"
-rustls = "0.20.4"
-tokio-rustls = "0.23.3"
+futures-util = "0.3"
+rustls-pemfile = "1.0"
+rustls = "0.20"
+tokio-rustls = "0.23"
 
 [profile.release]
 lto = true
